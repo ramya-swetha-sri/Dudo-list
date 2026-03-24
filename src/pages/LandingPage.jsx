@@ -28,7 +28,7 @@ const LandingPage = () => {
           </div>
 
           <h1 className="hero-title">
-            conquer your day , <br />
+            conquer your day, <br />
             <span>together.</span>
           </h1>
           

@@ -80,7 +80,7 @@
 
 .hero-title {
   font-size: clamp(3rem, 6vw, 4.5rem);
-  line-height: var(--line-height); /* Snap to notebook lines */
+  line-height: 1.2;
   letter-spacing: 1px;
   color: var(--text-primary);
   transform: rotate(-1deg);
