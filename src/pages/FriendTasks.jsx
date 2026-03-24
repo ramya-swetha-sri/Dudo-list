@@ -7,20 +7,27 @@ import FriendRequests from '../components/FriendRequests';
 import TaskList from '../components/TaskList';
 
 const FriendTasks = () => {
-  const { friends, removeFriend, getFriendTasks } = useTasks();
+  const { friends, removeFriend, subscribeToFriendTasks } = useTasks();
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
   const [friendTasksData, setFriendTasksData] = useState(null);
 
+  // Subscribe to friend's tasks when friend is selected
   useEffect(() => {
-    if (selectedFriendId && friends.length > 0) {
-      const loadFriendTasks = async () => {
-        const tasks = await getFriendTasks(selectedFriendId);
-        setFriendTasksData(tasks);
-      };
-      loadFriendTasks();
-    }
-  }, [selectedFriendId, friends]);
+    if (!selectedFriendId) return;
+
+    // Subscribe to friend's tasks with real-time updates
+    const unsubscribe = subscribeToFriendTasks(selectedFriendId, (tasksData) => {
+      setFriendTasksData(tasksData);
+    });
+
+    // Cleanup subscription when friend changes or component unmounts
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [selectedFriendId, subscribeToFriendTasks]);
 
   // Auto-select first friend if available
   useEffect(() => {

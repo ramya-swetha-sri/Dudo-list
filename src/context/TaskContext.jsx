@@ -383,19 +383,23 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  const getFriendTasks = async (friendId) => {
+  const subscribeToFriendTasks = (friendId, callback) => {
     try {
       const friendTasksRef = doc(db, 'users', friendId, 'data', 'tasks');
-      const friendDoc = await getDoc(friendTasksRef);
 
-      if (friendDoc.exists()) {
-        return friendDoc.data();
-      }
-      return null;
+      const unsubscribe = onSnapshot(friendTasksRef, (snapshot) => {
+        if (snapshot.exists()) {
+          callback(snapshot.data());
+        } else {
+          callback(null);
+        }
+      });
+
+      return unsubscribe;
     } catch (err) {
       setError(err.message);
-      console.error('Error fetching friend tasks:', err);
-      return null;
+      console.error('Error subscribing to friend tasks:', err);
+      return () => {}; // Return empty unsubscribe if error
     }
   };
 
@@ -417,7 +421,7 @@ export const TaskProvider = ({ children }) => {
           rejectFriendRequest,
           friends: [],
           friendRequests: [],
-          getFriendTasks,
+          subscribeToFriendTasks,
           user: null
         }}
       >
@@ -443,7 +447,7 @@ export const TaskProvider = ({ children }) => {
         rejectFriendRequest,
         friends,
         friendRequests,
-        getFriendTasks,
+        subscribeToFriendTasks,
         user
       }}
     >
