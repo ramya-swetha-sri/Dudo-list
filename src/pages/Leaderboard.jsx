@@ -50,15 +50,15 @@ const Leaderboard = () => {
   return (
     <div className="leaderboard-wrapper">
       <motion.div 
-        className="leaderboard-panel glass-panel"
-        initial={{ y: 20, opacity: 0, scale: 0.95 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="leaderboard-paper"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
       >
         <div className="lb-header">
-          <Trophy size={40} color="#fbbf24" className="bounce-icon" />
-          <h1 className="lb-glow-text">Daily Vibe Leaderboard</h1>
-          <p>Complete all tasks today to earn the glowing star!</p>
+          <Trophy size={36} color="var(--accent-secondary)" className="bounce-icon" />
+          <h1 className="handwriting-title">Daily Vibe Leaderboard</h1>
+          <p>Complete all tasks today to earn the star!</p>
         </div>
 
         <div className="lb-candidates">
@@ -67,28 +67,27 @@ const Leaderboard = () => {
             return (
               <motion.div 
                 key={c.name}
-                className={`lb-card ${c.hasStar ? 'winner-card' : ''} rank-${index + 1}`}
-                initial={{ opacity: 0, x: -20 }}
+                className={`lb-card ${c.hasStar ? 'winner-card' : ''}`}
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.2 }}
+                transition={{ delay: index * 0.1 }}
               >
                 <div className="lb-rank">
-                  {index === 0 && <Crown size={24} color="#f59e0b" />}
-                  {index === 1 && <span style={{fontSize: '1.2rem', color: '#666'}}>2nd</span>}
+                  {index === 0 && <Crown size={24} color="var(--accent-secondary)" />}
+                  {index === 1 && <span className="rank-text">2nd</span>}
                 </div>
                 
                 <div className="lb-avatar">{c.avatar}</div>
                 
                 <div className="lb-details">
                   <h3 className="lb-name">
-                    {c.name} {c.hasStar && <Star className="spin-star" size={20} fill="#f59e0b" color="#f59e0b" />}
+                    {c.name} {c.hasStar && <Star className="spin-star" size={20} fill="var(--accent-secondary)" color="var(--accent-secondary)" />}
                   </h3>
-                  <div className="lb-progress-bar">
-                    <div className="lb-progress-fill" style={{ width: `${pct}%` }}></div>
-                  </div>
-                  <div className="lb-stats">
-                    <span>{c.completed} / {c.total} tasks completed</span>
-                    <span>{pct}% 🎯</span>
+                  <div className="lb-progress-container">
+                    <div className="lb-progress-bar">
+                      <div className="lb-progress-fill" style={{ width: `${pct}%` }}></div>
+                    </div>
+                    <span className="lb-stats-text">{c.completed} / {c.total} completed ({pct}%)</span>
                   </div>
                 </div>
               </motion.div>
