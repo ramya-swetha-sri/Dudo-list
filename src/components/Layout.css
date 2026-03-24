@@ -1,99 +1,87 @@
 .layout-container {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
-.sidebar {
-  width: 250px;
-  padding: 1.5rem 1rem 1.5rem 70px; /* offset for red margin */
+.top-nav-bar {
   display: flex;
-  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 1.2rem 2rem 1.2rem 70px; /* Red margin offset */
+  border-bottom: 2px solid var(--accent-secondary);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
-  height: 100vh;
-  flex-shrink: 0;
-  border-right: 2px dotted var(--border-color);
-  background: rgba(255,255,255,0.7); /* slight fade to cover lines behind text */
+  z-index: 100;
+  width: 100%;
 }
 
-.sidebar-header {
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--accent-secondary);
+.p-menu-left {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  width: 100%;
 }
 
-.logo-text {
+.p-brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.8rem;
-  color: var(--text-primary);
-}
-
-.nav-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
-  border-radius: 8px;
-  color: var(--text-secondary);
-  position: relative;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  font-size: 1.3rem;
-}
-
-.nav-item:hover {
-  color: var(--accent-secondary);
-  background: transparent;
-  text-decoration: underline wavy var(--accent-secondary);
-}
-
-.nav-item.active {
-  color: var(--accent-secondary);
+  font-size: 1.5rem;
   font-weight: bold;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.p-nav-links {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap; /* in case screen is tight */
+}
+
+.p-nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  position: relative;
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  padding: 0.2rem 0;
+}
+
+.p-nav-links a.active, .p-nav-links a:hover {
+  color: var(--accent-secondary);
 }
 
 .nav-indicator {
   position: absolute;
-  left: -15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 3px;
   background: var(--accent-secondary);
-  border-radius: 50%;
+  border-radius: 2px;
 }
 
 .main-content {
   flex: 1;
-  padding: 2rem;
-  /* Align text content with the notebook lines. The lines start at 2rem. */
+  padding: 2rem 2rem 2rem 70px; /* Maintain the notebook red line offset everywhere */
   margin: 0 auto;
   max-width: 900px;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
-  .layout-container {
+  .p-menu-left {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
-  .sidebar {
-    width: auto;
-    height: auto;
-    position: static;
-    border-right: none;
-    border-bottom: 2px dotted var(--border-color);
-    padding-left: 70px; /* keep red margin offset */
-  }
-  .nav-links {
-    flex-direction: row;
-    overflow-x: auto;
+  .p-nav-links {
     gap: 1rem;
   }
 }

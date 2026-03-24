@@ -1,0 +1,192 @@
+.leaderboard-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  overflow: hidden;
+  height: 100%;
+}
+
+.leaderboard-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 4px 6px 0px rgba(0, 0, 0, 0.8);
+  border: 3px solid #000;
+  padding: 3rem;
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  z-index: 10;
+}
+
+.lb-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.lb-header h1 {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.lb-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.bounce-icon {
+  animation: bounce 2s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.lb-candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.lb-card {
+  display: flex;
+  align-items: center;
+  background: #fcfcfc;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.lb-card.winner-card {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+}
+
+.lb-rank {
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lb-avatar {
+  font-size: 2.5rem;
+  margin: 0 1.5rem;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px dashed #ccc;
+}
+
+.lb-details {
+  flex: 1;
+}
+
+.lb-name {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.spin-star {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.lb-progress-bar {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.lb-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 6px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.winner-card .lb-progress-fill {
+  background: linear-gradient(90deg, #f59e0b, #eab308);
+}
+
+.lb-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* Roaming Pixel Animals Animation */
+.roaming-animal {
+  position: absolute;
+  font-size: 2.5rem;
+  bottom: 10px;
+  z-index: 5;
+  white-space: nowrap;
+  pointer-events: none;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5));
+}
+
+.animal-1 {
+  animation: roamRight 18s linear infinite;
+  bottom: 5vh;
+}
+
+.animal-2 {
+  animation: roamLeft 25s linear infinite;
+  bottom: 15vh;
+  font-size: 3rem;
+}
+
+.animal-3 {
+  animation: roamRight 14s linear infinite;
+  bottom: 8vh;
+  font-size: 2rem;
+}
+
+.animal-4 {
+  animation: roamLeft 20s linear infinite;
+  bottom: 25vh;
+}
+
+.delay-1 { animation-delay: -5s; }
+.delay-2 { animation-delay: -10s; }
+.delay-3 { animation-delay: -2s; }
+
+@keyframes roamRight {
+  0% { transform: translateX(-10vw) scaleX(1); left: 0; }
+  45% { transform: translateX(110vw) scaleX(1); left: 0; }
+  50% { transform: translateX(110vw) scaleX(-1); left: 0; }
+  95% { transform: translateX(-10vw) scaleX(-1); left: 0; }
+  100% { transform: translateX(-10vw) scaleX(1); left: 0; }
+}
+
+@keyframes roamLeft {
+  0% { transform: translateX(110vw) scaleX(-1); right: 0; }
+  45% { transform: translateX(-10vw) scaleX(-1); right: 0; }
+  50% { transform: translateX(-10vw) scaleX(1); right: 0; }
+  95% { transform: translateX(110vw) scaleX(1); right: 0; }
+  100% { transform: translateX(110vw) scaleX(-1); right: 0; }
+}

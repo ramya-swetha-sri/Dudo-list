@@ -17,30 +17,32 @@ const Layout = () => {
     { path: '/friend-tasks', label: `${friendName}'s tasks`, icon: Users },
     { path: '/group-tasks', label: 'Group Vibe', icon: Music },
     { path: '/pomodoro', label: 'Pomodoro Clock', icon: Clock },
+    { path: '/leaderboard', label: 'Leaderboard', icon: CheckSquare },
   ];
 
   return (
     <div className="layout-container">
-      <nav className="sidebar">
-        <div className="sidebar-header">
-          <Link to="/">
-            <h2 className="logo-text"><CheckSquare size={24} /> DuoTask</h2>
+      <nav className="top-nav-bar">
+        <div className="p-menu-left">
+          <Link to="/" className="p-brand">
+            <CheckSquare size={24} />
+            <span>DuoTask</span>
           </Link>
-        </div>
-        <div className="nav-links">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link to={item.path} key={item.path} className={`nav-item ${isActive ? 'active' : ''}`}>
-                <Icon size={20} />
-                <span>{item.label}</span>
-                {isActive && (
-                  <motion.div layoutId="navIndicator" className="nav-indicator" />
-                )}
-              </Link>
-            );
-          })}
+          <div className="p-nav-links">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link to={item.path} key={item.path} className={isActive ? 'active' : ''}>
+                  <Icon size={18} style={{ marginRight: '6px', display: 'inline' }} />
+                  {item.label}
+                  {isActive && (
+                    <motion.div layoutId="navIndicator" className="nav-indicator" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </nav>
       <main className="main-content">
