@@ -94,7 +94,7 @@ const Pomodoro = () => {
           </button>
         </div>
 
-        <div className="timer-display">
+        <div className="timer-glass-circle">
           {formatTime(timeLeft)}
         </div>
 

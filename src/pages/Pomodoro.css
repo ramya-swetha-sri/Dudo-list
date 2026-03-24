@@ -83,12 +83,23 @@
   border-color: white;
 }
 
-.timer-display {
-  font-size: 6rem;
+.timer-glass-circle {
+  width: 280px;
+  height: 280px;
+  margin: 0 auto 3rem auto;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 0 15px rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
   font-weight: 800;
-  line-height: 1;
-  margin-bottom: 3rem;
-  text-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  color: white;
 }
 
 .controls {
