@@ -104,6 +104,7 @@ const Pomodoro = () => {
           <div className="p-nav-links">
             <Link to="/my-tasks">My Tasks</Link>
             <Link to="/friend-tasks">Friend's Tasks</Link>
+            <Link to="/leaderboard">Leaderboard</Link>
           </div>
         </div>
         

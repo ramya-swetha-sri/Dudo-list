@@ -50,14 +50,15 @@ const Leaderboard = () => {
   return (
     <div className="leaderboard-wrapper">
       <motion.div 
-        className="leaderboard-panel paper-style"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        className="leaderboard-panel glass-panel"
+        initial={{ y: 20, opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <div className="lb-header">
-          <Trophy size={32} color="#f59e0b" className="bounce-icon" />
-          <h1>Daily Vibe Leaderboard 🏆</h1>
-          <p>Complete all tasks today to earn the golden star!</p>
+          <Trophy size={40} color="#fbbf24" className="bounce-icon" />
+          <h1 className="lb-glow-text">Daily Vibe Leaderboard</h1>
+          <p>Complete all tasks today to earn the glowing star!</p>
         </div>
 
         <div className="lb-candidates">
@@ -95,12 +96,6 @@ const Leaderboard = () => {
           })}
         </div>
       </motion.div>
-
-      {/* Roaming pixel animals */}
-      <div className="roaming-animal animal-1">🐕</div>
-      <div className="roaming-animal animal-2 delay-1">🐢</div>
-      <div className="roaming-animal animal-3 delay-2">🦆</div>
-      <div className="roaming-animal animal-4 delay-3">🐇</div>
     </div>
   );
 };
