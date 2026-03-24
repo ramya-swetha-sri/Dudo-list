@@ -1,0 +1,79 @@
+.group-tasks-container {
+  height: 100%;
+}
+
+.group-content {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.task-section {
+  flex: 1;
+}
+
+.spotify-section {
+  position: sticky;
+  top: 2rem;
+  display:flex;
+  flex-direction: column;
+}
+
+.spotify-title {
+  font-size: 2rem;
+  margin-bottom: 0;
+  line-height: var(--line-height);
+  color: var(--accent-secondary);
+}
+
+.spotify-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  line-height: var(--line-height);
+}
+
+/* Make it look like a taped photo */
+.spotify-embed {
+  padding: 0.5rem;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 2px 4px 10px rgba(0,0,0,0.1);
+  position: relative;
+  transform: rotate(2deg);
+  transition: transform 0.3s ease;
+}
+
+.spotify-embed::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-4deg);
+  width: 80px;
+  height: 25px;
+  background: rgba(255, 255, 200, 0.4); /* translucent tape */
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.spotify-embed:hover {
+  transform: translateY(-4px) rotate(0deg);
+  box-shadow: 4px 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 1024px) {
+  .group-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  
+  .spotify-section {
+    position: static;
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}

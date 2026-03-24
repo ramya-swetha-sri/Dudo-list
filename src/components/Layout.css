@@ -1,0 +1,99 @@
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  padding: 1.5rem 1rem 1.5rem 70px; /* offset for red margin */
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  border-right: 2px dotted var(--border-color);
+  background: rgba(255,255,255,0.7); /* slight fade to cover lines behind text */
+}
+
+.sidebar-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--accent-secondary);
+}
+
+.logo-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.8rem;
+  color: var(--text-primary);
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  position: relative;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 1.3rem;
+}
+
+.nav-item:hover {
+  color: var(--accent-secondary);
+  background: transparent;
+  text-decoration: underline wavy var(--accent-secondary);
+}
+
+.nav-item.active {
+  color: var(--accent-secondary);
+  font-weight: bold;
+}
+
+.nav-indicator {
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: var(--accent-secondary);
+  border-radius: 50%;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  /* Align text content with the notebook lines. The lines start at 2rem. */
+  margin: 0 auto;
+  max-width: 900px;
+}
+
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: auto;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 2px dotted var(--border-color);
+    padding-left: 70px; /* keep red margin offset */
+  }
+  .nav-links {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 1rem;
+  }
+}

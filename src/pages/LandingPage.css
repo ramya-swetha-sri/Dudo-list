@@ -1,0 +1,174 @@
+.landing-container {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-left: 70px; /* Red margin offset */
+}
+
+/* Remove blobs entirely for paper theme */
+.blobs, .blob {
+  display: none;
+}
+
+.landing-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  margin: 1.5rem auto;
+  width: 90%;
+  max-width: 1000px;
+  z-index: 10;
+  border-bottom: 2px solid var(--text-primary);
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+}
+.landing-nav.glass-panel { border: none; background: transparent; }
+
+.nav-logo {
+  font-size: 2rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.nav-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.hero-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  padding: 2rem;
+  z-index: 10;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.5rem;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2rem;
+  border-radius: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 2px dashed var(--accent-secondary);
+  color: var(--accent-secondary);
+  transform: rotate(-2deg);
+  background: transparent;
+  box-shadow: none;
+}
+.badge.glass-panel { border-radius: 0; }
+
+.hero-title {
+  font-size: clamp(3rem, 6vw, 4.5rem);
+  line-height: var(--line-height); /* Snap to notebook lines */
+  letter-spacing: 1px;
+  color: var(--text-primary);
+  transform: rotate(-1deg);
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  line-height: var(--line-height);
+}
+
+.hero-cta {
+  margin-top: 1rem;
+}
+
+.cta-main {
+  font-size: 1.5rem;
+  padding: 0.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 2px 4px 0 rgba(0,0,0,0.8);
+  border: 2px solid #000;
+  background: #fff;
+  color: #000;
+  transform: rotate(2deg);
+}
+.cta-main:hover {
+  background: var(--accent-secondary);
+  color: white;
+  border-color: var(--accent-secondary);
+  box-shadow: 2px 4px 0 rgba(0,0,0,0.2);
+}
+
+.hero-cards {
+  position: relative;
+  margin-top: 3rem;
+  height: 200px;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Polariod/Sticky note look for cards */
+.preview-card {
+  position: absolute;
+  width: 250px;
+  padding: 1.5rem;
+  background: #fff9c4 !important; /* light yellow sticky note */
+  border: 1px solid #ccc !important;
+  box-shadow: 3px 5px 10px rgba(0,0,0,0.1) !important;
+  border-radius: 2px !important;
+  text-align: left;
+}
+
+.card-1 {
+  left: 20px;
+  top: 0;
+  transform: rotate(-5deg);
+  z-index: 2;
+}
+
+.card-2 {
+  right: 20px;
+  top: 20px;
+  transform: rotate(5deg);
+  z-index: 1;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-primary);
+}
+
+.skeleton-line {
+  height: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 0.5rem;
+}
