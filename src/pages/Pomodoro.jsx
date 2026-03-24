@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Pause, RotateCcw, Image as ImageIcon, Maximize, Minimize } from 'lucide-react';
+import { Play, Pause, RotateCcw, Image as ImageIcon, Maximize, Minimize, CheckSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './Pomodoro.css';
 
 const backgrounds = [
@@ -94,29 +95,38 @@ const Pomodoro = () => {
           <source src={bg.value} type="video/mp4" />
         </video>
       )}
-      {/* Fullscreen Toggle */}
-      <button 
-        className="fullscreen-toggle-btn"
-        onClick={toggleFullscreen}
-        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-      >
-        {isFullscreen ? <Minimize size={24} /> : <Maximize size={24} />}
-      </button>
-
-      <div className="bg-selector-glass mb-6">
-        <ImageIcon size={20} style={{ marginRight: '8px' }} />
-        <div className="bg-buttons">
+      <nav className="pomodoro-menu-bar">
+        <div className="p-menu-left">
+          <Link to="/" className="p-brand">
+            <CheckSquare size={20} />
+            <span>DuoTask</span>
+          </Link>
+          <div className="p-nav-links">
+            <Link to="/my-tasks">My Tasks</Link>
+            <Link to="/friend-tasks">Friend's Tasks</Link>
+          </div>
+        </div>
+        
+        <div className="p-menu-right">
+          <ImageIcon size={18} style={{ marginRight: '8px' }} />
           {backgrounds.map(b => (
             <button 
               key={b.id} 
-              className={`bg-btn ${bg.id === b.id ? 'active' : ''}`}
+              className={`p-bg-btn ${bg.id === b.id ? 'active' : ''}`}
               onClick={() => setBg(b)}
             >
               {b.name}
             </button>
           ))}
+          <button 
+            className="fullscreen-toggle-btn-inline"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+          </button>
         </div>
-      </div>
+      </nav>
 
       <motion.div 
         className="timer-glass-panel"
