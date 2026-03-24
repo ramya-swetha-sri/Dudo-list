@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Pause, RotateCcw, Image as ImageIcon } from 'lucide-react';
+import { Play, Pause, RotateCcw, Image as ImageIcon, Maximize, Minimize } from 'lucide-react';
 import './Pomodoro.css';
 
 const backgrounds = [
-  { id: 'gradient', name: 'Dreamy Vibe', value: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)' },
-  { id: 'cafe', name: 'Cozy Cafe', value: 'url(https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80)' },
-  { id: 'lofi', name: 'Lofi Room', value: 'url(https://images.unsplash.com/photo-1510519138101-570d1dca3d66?auto=format&fit=crop&q=80)' },
-  { id: 'rain', name: 'Rainy Window', value: 'url(https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&q=80)' },
+  { id: 'work', name: 'Work Mode', type: 'video', value: '/work_mode.mp4' },
+  { id: 'lofi', name: 'Lofi Mode', type: 'video', value: '/lofi_mode.mp4' },
+  { id: 'cafe', name: 'Cozy Cafe', type: 'video', value: '/cozy%20cafe_mode.mp4' },
+  { id: 'us', name: 'Us Mode', type: 'video', value: '/us_mode.mp4' },
 ];
 
 const Pomodoro = () => {
@@ -15,6 +15,8 @@ const Pomodoro = () => {
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState('focus'); // focus, break
   const [bg, setBg] = useState(backgrounds[0]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const pomodoroRef = React.useRef(null);
 
   useEffect(() => {
     let interval = null;
@@ -53,11 +55,54 @@ const Pomodoro = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      pomodoroRef.current?.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  // Listen to fullscreen changes to update the state correctly
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
     <div 
-      className="pomodoro-container"
-      style={{ background: bg.value, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      ref={pomodoroRef}
+      className={`pomodoro-container ${isFullscreen ? 'fullscreen-mode' : ''}`}
+      style={bg.type !== 'video' ? { background: bg.value, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
     >
+      {bg.type === 'video' && (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="video-background"
+          key={bg.id}
+        >
+          <source src={bg.value} type="video/mp4" />
+        </video>
+      )}
+      {/* Fullscreen Toggle */}
+      <button 
+        className="fullscreen-toggle-btn"
+        onClick={toggleFullscreen}
+        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+      >
+        {isFullscreen ? <Minimize size={24} /> : <Maximize size={24} />}
+      </button>
+
       <div className="bg-selector-glass mb-6">
         <ImageIcon size={20} style={{ marginRight: '8px' }} />
         <div className="bg-buttons">
