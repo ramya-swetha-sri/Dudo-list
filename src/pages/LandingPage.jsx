@@ -2,19 +2,17 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Sparkles, Heart, Rocket, LogOut } from 'lucide-react';
-import { auth } from '../config/firebase';
-import { signOut } from 'firebase/auth';
 import { useTasks } from '../context/TaskContext';
 import Auth from '../components/Auth';
 import './LandingPage.css';
 
 const LandingPage = () => {
-  const { user } = useTasks();
+  const { user, signout } = useTasks();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      signout();
       navigate('/');
     } catch (err) {
       console.error('Sign out error:', err);

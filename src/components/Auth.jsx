@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
-import { auth } from '../config/firebase';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut
-} from 'firebase/auth';
+import { useTasks } from '../context/TaskContext';
 import { useNavigate } from 'react-router-dom';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [isSignUp, setIsSignUp] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { signup, signin } = useTasks();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -21,24 +18,22 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      let success;
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        success = await signup(email, password, displayName);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        success = await signin(email, password);
       }
-      navigate('/my-tasks');
+
+      if (success) {
+        navigate('/my-tasks');
+      } else {
+        setError('Authentication failed');
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Authentication failed');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (err) {
-      setError(err.message);
     }
   };
 
@@ -46,6 +41,16 @@ const Auth = () => {
     <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
       <h2>{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
       <form onSubmit={handleSubmit}>
+        {isSignUp && (
+          <input
+            type="text"
+            placeholder="Display Name"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            required
+            style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
+          />
+        )}
         <input
           type="email"
           placeholder="Email"
@@ -68,17 +73,13 @@ const Auth = () => {
       </form>
 
       <button
-        onClick={() => setIsSignUp(!isSignUp)}
+        onClick={() => {
+          setIsSignUp(!isSignUp);
+          setError('');
+        }}
         style={{ marginTop: '10px', width: '100%', padding: '10px' }}
       >
         {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-      </button>
-
-      <button
-        onClick={handleSignOut}
-        style={{ marginTop: '10px', width: '100%', padding: '10px', backgroundColor: '#ff6b6b', color: 'white' }}
-      >
-        Sign Out
       </button>
 
       {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}

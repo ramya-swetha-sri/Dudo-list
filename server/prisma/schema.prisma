@@ -1,0 +1,64 @@
+// This is your Prisma schema file.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  displayName   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Tasks owned by this user
+  tasks         Task[]
+
+  // Friends relationship - who this user added
+  friends       User[]    @relation("UserFriends")
+  // Friends who added this user
+  friendedBy    User[]    @relation("UserFriends")
+
+  // Friend requests sent TO this user
+  friendRequestsReceived FriendRequest[] @relation("requestTo")
+  // Friend requests sent BY this user
+  friendRequestsSent     FriendRequest[] @relation("requestFrom")
+
+  @@index([email])
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  text      String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model FriendRequest {
+  id        String   @id @default(cuid())
+  status    String   @default("pending") // pending, accepted, rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fromId    String
+  from      User     @relation("requestFrom", fields: [fromId], references: [id], onDelete: Cascade)
+
+  toId      String
+  to        User     @relation("requestTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId])
+  @@index([toId])
+}

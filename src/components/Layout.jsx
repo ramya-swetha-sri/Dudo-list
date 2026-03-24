@@ -2,20 +2,18 @@ import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckSquare, Users, Music, User, Clock, LogOut } from 'lucide-react';
-import { signOut } from 'firebase/auth';
-import { auth } from '../config/firebase';
 import './Layout.css';
 
 import { useTasks } from '../context/TaskContext';
 
 const Layout = () => {
-  const { tasks, user, loading } = useTasks();
+  const { tasks, user, loading, signout } = useTasks();
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      signout();
       navigate('/');
     } catch (err) {
       console.error('Sign out error:', err);
