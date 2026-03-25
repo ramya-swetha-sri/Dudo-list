@@ -14,17 +14,38 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
-  }
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+  },
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  reconnectionAttempts: 5
 });
 
 const prisma = new PrismaClient();
+
+// Map to track which user is connected via which socket
+const userSocketMap = new Map();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// ============ DATABASE HEALTH CHECK ============
+
+const verifyDatabaseConnection = async () => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    console.log('✓ Database connection successful');
+    return true;
+  } catch (error) {
+    console.error('✗ Database connection failed:', error.message);
+    return false;
+  }
+};
 
 // Auth Middleware
 const verifyToken = (req, res, next) => {
@@ -115,6 +136,21 @@ app.post('/api/auth/signin', async (req, res) => {
   }
 });
 
+// ============ HEALTH CHECK ============
+
+app.get('/api/health', async (req, res) => {
+  try {
+    const dbHealthy = await verifyDatabaseConnection();
+    if (dbHealthy) {
+      res.json({ status: 'ok', database: 'connected', timestamp: new Date().toISOString() });
+    } else {
+      res.status(503).json({ status: 'error', database: 'disconnected' });
+    }
+  } catch (err) {
+    res.status(503).json({ status: 'error', message: err.message });
+  }
+});
+
 // ============ TASK ROUTES ============
 
 // Get user's tasks
@@ -126,7 +162,7 @@ app.get('/api/tasks', verifyToken, async (req, res) => {
     });
     res.json(tasks);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching tasks:', err.message);
     res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 });
@@ -143,12 +179,14 @@ app.post('/api/tasks', verifyToken, async (req, res) => {
       }
     });
 
-    // Emit to all connected clients
-    io.emit('task:created', { userId: req.user.id, task });
+    // Emit to user's room and broadcast to friends
+    io.to(`user:${req.user.id}`).emit('task:created', { userId: req.user.id, task });
+    io.emit('friend-task:created', { userId: req.user.id, task });
 
+    console.log(`Task created: ${task.id} by user ${req.user.id}`);
     res.json(task);
   } catch (err) {
-    console.error(err);
+    console.error('Error creating task:', err.message);
     res.status(500).json({ error: 'Failed to create task' });
   }
 });
@@ -167,12 +205,14 @@ app.put('/api/tasks/:id', verifyToken, async (req, res) => {
       }
     });
 
-    // Emit to all connected clients
-    io.emit('task:updated', { userId: req.user.id, task });
+    // Emit to user's room and broadcast to friends
+    io.to(`user:${req.user.id}`).emit('task:updated', { userId: req.user.id, task });
+    io.emit('friend-task:updated', { userId: req.user.id, task });
 
+    console.log(`Task updated: ${id} by user ${req.user.id} - completed: ${task.completed}`);
     res.json(task);
   } catch (err) {
-    console.error(err);
+    console.error('Error updating task:', err.message);
     res.status(500).json({ error: 'Failed to update task' });
   }
 });
@@ -184,12 +224,14 @@ app.delete('/api/tasks/:id', verifyToken, async (req, res) => {
 
     await prisma.task.delete({ where: { id } });
 
-    // Emit to all connected clients
-    io.emit('task:deleted', { userId: req.user.id, taskId: id });
+    // Emit to user's room and broadcast to friends
+    io.to(`user:${req.user.id}`).emit('task:deleted', { userId: req.user.id, taskId: id });
+    io.emit('friend-task:deleted', { userId: req.user.id, taskId: id });
 
+    console.log(`Task deleted: ${id} by user ${req.user.id}`);
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    console.error('Error deleting task:', err.message);
     res.status(500).json({ error: 'Failed to delete task' });
   }
 });
@@ -404,14 +446,89 @@ app.post('/api/friends/:friendId/remove', verifyToken, async (req, res) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Handle user joining with authentication
+  socket.on('user:join', (data) => {
+    try {
+      const { userId, token } = data;
+      
+      // Verify token
+      jwt.verify(token, JWT_SECRET);
+      
+      // Store socket mapping
+      userSocketMap.set(userId, socket.id);
+      
+      // Join user-specific room for targeted broadcasts
+      socket.join(`user:${userId}`);
+      socket.join('realtime-updates');
+      
+      console.log(`User ${userId} joined room: user:${userId}`);
+      
+      // Notify others that user is online
+      io.emit('user:online', { userId, socketId: socket.id });
+    } catch (err) {
+      console.error('Authentication failed for socket:', err.message);
+      socket.emit('auth:error', { message: 'Invalid token' });
+    }
+  });
+
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    // Find and remove user mapping
+    let disconnectedUserId = null;
+    for (const [userId, socketId] of userSocketMap.entries()) {
+      if (socketId === socket.id) {
+        disconnectedUserId = userId;
+        userSocketMap.delete(userId);
+        break;
+      }
+    }
+    
+    if (disconnectedUserId) {
+      console.log(`User ${disconnectedUserId} disconnected from room: user:${disconnectedUserId}`);
+      io.emit('user:offline', { userId: disconnectedUserId });
+    } else {
+      console.log('Unknown user disconnected:', socket.id);
+    }
+  });
+
+  // Handle reconnection
+  socket.on('reconnect', () => {
+    console.log('User reconnected:', socket.id);
+  });
+
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
   });
 });
 
 // ============ START SERVER ============
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+
+// Verify database connection before starting server
+verifyDatabaseConnection().then((isConnected) => {
+  if (!isConnected) {
+    console.error('\n⚠️  WARNING: Database connection verification failed!');
+    console.error('The server will start but database operations may fail.');
+    console.error('Check your DATABASE_URL environment variable.\n');
+  }
+
+  server.listen(PORT, () => {
+    console.log(`\n✓ Server running on http://localhost:${PORT}`);
+    console.log(`✓ Socket.io listening on ws://localhost:${PORT}`);
+    console.log(`✓ Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+    console.log('\nServer is ready to accept connections.\n');
+  });
+
+  // Graceful shutdown
+  process.on('SIGINT', async () => {
+    console.log('\nShutting down gracefully...');
+    await prisma.$disconnect();
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
+  });
+}).catch((err) => {
+  console.error('Failed to start server:', err.message);
+  process.exit(1);
 });

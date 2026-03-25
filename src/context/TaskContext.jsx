@@ -17,10 +17,12 @@ export const TaskProvider = ({ children }) => {
   // Check if user is logged in on mount
   useEffect(() => {
     const token = localStorage.getItem('authToken');
+    const userId = localStorage.getItem('userId');
     const userData = localStorage.getItem('user');
 
-    if (token && userData) {
-      api.setAuthToken(token);
+    if (token && userId && userData) {
+      api.setAuthToken(token, userId);
+      api.connectSocket();
       setUser(JSON.parse(userData));
       loadUserData();
     }
@@ -49,7 +51,7 @@ export const TaskProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
-    // Listen for task updates
+    // Own task events
     api.onTaskCreated(({ userId, task }) => {
       if (userId === user.id) {
         setTasks(prev => [task, ...prev]);
@@ -61,8 +63,27 @@ export const TaskProvider = ({ children }) => {
         setTasks(prev =>
           prev.map(t => t.id === task.id ? task : t)
         );
-      } else {
-        // Update friend's tasks in real-time
+      }
+    });
+
+    api.onTaskDeleted(({ userId, taskId }) => {
+      if (userId === user.id) {
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+      }
+    });
+
+    // Friend task events (for real-time updates)
+    api.onFriendTaskCreated(({ userId, task }) => {
+      if (userId !== user.id) {
+        setFriendTasksData(prev => ({
+          ...prev,
+          [userId]: [task, ...(prev[userId] || [])]
+        }));
+      }
+    });
+
+    api.onFriendTaskUpdated(({ userId, task }) => {
+      if (userId !== user.id) {
         setFriendTasksData(prev => ({
           ...prev,
           [userId]: (prev[userId] || []).map(t => t.id === task.id ? task : t)
@@ -70,10 +91,8 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
-    api.onTaskDeleted(({ userId, taskId }) => {
-      if (userId === user.id) {
-        setTasks(prev => prev.filter(t => t.id !== taskId));
-      } else {
+    api.onFriendTaskDeleted(({ userId, taskId }) => {
+      if (userId !== user.id) {
         setFriendTasksData(prev => ({
           ...prev,
           [userId]: (prev[userId] || []).filter(t => t.id !== taskId)
@@ -81,9 +100,9 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
+    // Friend request events
     api.onFriendRequestReceived(({ toId, request }) => {
       if (toId === user.id) {
-        // Reload friend requests
         api.getFriendRequests().then(setFriendRequests);
       }
     });
@@ -100,22 +119,38 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
+    // User presence events
+    api.onUserOnline(({ userId }) => {
+      console.log(`User ${userId} is online`);
+    });
+
+    api.onUserOffline(({ userId }) => {
+      console.log(`User ${userId} is offline`);
+    });
+
     return () => {
       api.offTaskCreated();
       api.offTaskUpdated();
       api.offTaskDeleted();
+      api.offFriendTaskCreated();
+      api.offFriendTaskUpdated();
+      api.offFriendTaskDeleted();
       api.offFriendRequestReceived();
       api.offFriendRequestAccepted();
       api.offFriendRemoved();
+      api.offUserOnline();
+      api.offUserOffline();
     };
   }, [user]);
 
   const signup = async (email, password, displayName) => {
     try {
       const { token, user: userData } = await api.signup(email, password, displayName);
-      api.setAuthToken(token);
+      api.setAuthToken(token, userData.id);
+      api.connectSocket();
       setUser(userData);
       localStorage.setItem('authToken', token);
+      localStorage.setItem('userId', userData.id);
       localStorage.setItem('user', JSON.stringify(userData));
       await loadUserData();
       return true;
@@ -128,9 +163,11 @@ export const TaskProvider = ({ children }) => {
   const signin = async (email, password) => {
     try {
       const { token, user: userData } = await api.signin(email, password);
-      api.setAuthToken(token);
+      api.setAuthToken(token, userData.id);
+      api.connectSocket();
       setUser(userData);
       localStorage.setItem('authToken', token);
+      localStorage.setItem('userId', userData.id);
       localStorage.setItem('user', JSON.stringify(userData));
       await loadUserData();
       return true;
@@ -141,11 +178,13 @@ export const TaskProvider = ({ children }) => {
   };
 
   const signout = () => {
+    api.disconnectSocket();
     setUser(null);
     setTasks([]);
     setFriends([]);
     setFriendRequests([]);
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
     localStorage.removeItem('user');
   };
 
