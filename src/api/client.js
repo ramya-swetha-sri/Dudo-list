@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // Initialize socket but don't connect yet (will connect on login)
 const socket = io(API_BASE_URL, {
