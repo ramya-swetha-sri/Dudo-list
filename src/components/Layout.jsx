@@ -1,13 +1,14 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckSquare, Users, Music, User, Clock, LogOut } from 'lucide-react';
+import { CheckSquare, Users, Music, User, Clock, LogOut, Menu } from 'lucide-react';
 import './Layout.css';
 
 import { useTasks } from '../context/TaskContext';
 
 const Layout = () => {
   const { tasks, user, loading, signout } = useTasks();
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -45,8 +46,16 @@ const Layout = () => {
   ];
 
   return (
-    <div className="layout-container">
-      <nav className="sidebar">
+    <div className={`layout-container ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <button 
+        className="sidebar-toggle" 
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        aria-label={isCollapsed ? "Show menu" : "Hide menu"}
+      >
+        <Menu size={24} />
+      </button>
+
+      <nav className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <Link to="/">
             <h2 className="logo-text"><CheckSquare size={24} /> DuoTask</h2>
@@ -67,26 +76,11 @@ const Layout = () => {
             );
           })}
         </div>
-        <div style={{ marginTop: 'auto', padding: '16px', borderTop: '1px solid #eee' }}>
-          <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>{user.email}</p>
-          <button
-            onClick={handleSignOut}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              backgroundColor: '#ff6b6b',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
-          >
+        <div className="sidebar-footer">
+          <p className="user-email">{user.email}</p>
+          <button onClick={handleSignOut} className="signout-button">
             <LogOut size={16} />
-            Sign Out
+            <span>Sign Out</span>
           </button>
         </div>
       </nav>

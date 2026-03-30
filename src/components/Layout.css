@@ -1,11 +1,35 @@
 .layout-container {
   display: flex;
   min-height: 100vh;
+  position: relative;
+}
+
+.sidebar-toggle {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 1000;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  color: var(--text-primary);
+}
+
+.sidebar-toggle:hover {
+  background: var(--accent-secondary);
+  color: white;
 }
 
 .sidebar {
   width: 250px;
-  padding: 1.5rem 1rem 1.5rem 70px; /* offset for red margin */
+  padding: 4rem 1rem 1.5rem 1rem;
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -13,13 +37,25 @@
   height: 100vh;
   flex-shrink: 0;
   border-right: 2px dotted var(--border-color);
-  background: rgba(255,255,255,0.7); /* slight fade to cover lines behind text */
+  background: rgba(255,255,255,0.9);
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-right: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .sidebar-header {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid var(--accent-secondary);
+  white-space: nowrap;
 }
 
 .logo-text {
@@ -47,6 +83,7 @@
   transition: all 0.2s ease;
   font-weight: 500;
   font-size: 1.3rem;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -60,13 +97,47 @@
   font-weight: bold;
 }
 
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid #eee;
+  white-space: nowrap;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.signout-button {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.signout-button:hover {
+  background: #fa5252;
+}
+
 .nav-indicator {
   position: absolute;
-  left: -15px;
+  left: -8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background: var(--accent-secondary);
   border-radius: 50%;
 }
@@ -74,9 +145,13 @@
 .main-content {
   flex: 1;
   padding: 2rem;
-  /* Align text content with the notebook lines. The lines start at 2rem. */
   margin: 0 auto;
   max-width: 900px;
+  transition: all 0.3s ease-in-out;
+}
+
+.sidebar-collapsed .main-content {
+  max-width: 1100px;
 }
 
 @media (max-width: 768px) {
@@ -89,7 +164,17 @@
     position: static;
     border-right: none;
     border-bottom: 2px dotted var(--border-color);
-    padding-left: 70px; /* keep red margin offset */
+  }
+  .sidebar.collapsed {
+    height: 0;
+    width: auto;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  .sidebar-toggle {
+    position: static;
+    margin: 1rem;
+    width: fit-content;
   }
   .nav-links {
     flex-direction: row;
