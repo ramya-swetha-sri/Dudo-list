@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Users, CheckCircle2, Circle } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
@@ -7,46 +7,68 @@ import FriendRequests from '../components/FriendRequests';
 import './FriendTasks.css';
 
 const FriendTasks = () => {
-  const { friends, removeFriend, subscribeToFriendTasks } = useTasks();
+  const { friends, removeFriend, subscribeFriendTasks, getFriendTasks } = useTasks();
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
-  const [friendTasksData, setFriendTasksData] = useState(null);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
 
-  // Subscribe to friend's tasks when friend is selected
-  useEffect(() => {
-    if (!selectedFriendId) return;
-
-    setIsLoadingTasks(true);
-    // Subscribe to friend's tasks with real-time updates
-    const unsubscribe = subscribeToFriendTasks(selectedFriendId, (tasksData) => {
-      setFriendTasksData(tasksData);
-      setIsLoadingTasks(false);
-    });
-
-    // Cleanup subscription when friend changes or component unmounts
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [selectedFriendId, subscribeToFriendTasks]);
-
-  // Auto-select first friend if available
   useEffect(() => {
     if (friends.length > 0 && !selectedFriendId) {
       setSelectedFriendId(friends[0].id);
     }
   }, [friends, selectedFriendId]);
 
-  const selectedFriend = friends.find(f => f.id === selectedFriendId);
+  useEffect(() => {
+    let isActive = true;
+
+    const loadFriendTasks = async () => {
+      if (!selectedFriendId) return;
+
+      setIsLoadingTasks(true);
+      await subscribeFriendTasks(selectedFriendId);
+
+      if (isActive) {
+        setIsLoadingTasks(false);
+      }
+    };
+
+    loadFriendTasks();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedFriendId, subscribeFriendTasks]);
+
+  const selectedFriend = friends.find((friend) => friend.id === selectedFriendId);
+  const friendTasks = useMemo(() => {
+    if (!selectedFriendId) {
+      return [];
+    }
+
+    return getFriendTasks(selectedFriendId);
+  }, [getFriendTasks, selectedFriendId]);
+
+  const handleRemoveFriend = async () => {
+    if (!selectedFriend || !window.confirm(`Are you sure you want to remove ${selectedFriend.displayName}?`)) {
+      return;
+    }
+
+    await removeFriend(selectedFriendId);
+
+    if (friends.length > 1) {
+      const otherFriend = friends.find((friend) => friend.id !== selectedFriendId);
+      setSelectedFriendId(otherFriend?.id || null);
+    } else {
+      setSelectedFriendId(null);
+    }
+  };
 
   if (friends.length === 0) {
     return (
       <div className="friend-tasks-container">
         <FriendRequests />
-        
-        <motion.div 
+
+        <motion.div
           className="empty-state"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -79,7 +101,6 @@ const FriendTasks = () => {
     <div className="friend-tasks-container">
       <FriendRequests />
 
-      {/* Friends list section */}
       <section className="friends-section">
         <div className="friends-header">
           <h2>Your Friends</h2>
@@ -105,7 +126,6 @@ const FriendTasks = () => {
         </div>
       </section>
 
-      {/* Friend's content area */}
       <AnimatePresence mode="wait">
         {selectedFriend && (
           <motion.div
@@ -120,20 +140,7 @@ const FriendTasks = () => {
                 <h1>{selectedFriend.displayName}'s Tasks</h1>
                 <p>Support {selectedFriend.displayName} by watching their progress!</p>
               </div>
-              <button
-                className="remove-friend-btn"
-                onClick={() => {
-                  if (window.confirm(`Are you sure you want to remove ${selectedFriend.displayName}?`)) {
-                    removeFriend(selectedFriendId);
-                    if (friends.length > 1) {
-                      const otherFriend = friends.find(f => f.id !== selectedFriendId);
-                      setSelectedFriendId(otherFriend.id);
-                    } else {
-                      setSelectedFriendId(null);
-                    }
-                  }
-                }}
-              >
+              <button className="remove-friend-btn" onClick={handleRemoveFriend}>
                 <Trash2 size={18} />
                 <span>Remove</span>
               </button>
@@ -144,40 +151,41 @@ const FriendTasks = () => {
                 <CheckCircle2 size={24} color="#10b981" />
                 Live Task Board
               </h3>
-              
+
               {isLoadingTasks ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
                   Loading tasks...
                 </div>
-              ) : friendTasksData?.myTasks && friendTasksData.myTasks.length > 0 ? (
+              ) : friendTasks.length > 0 ? (
                 <ul className="friend-task-list">
-                  {friendTasksData.myTasks.map((task, index) => (
+                  {friendTasks.map((task, index) => (
                     <motion.li
                       key={task.id}
-                      className="friend-task-item"
+                      className={`friend-task-item ${task.completed ? 'completed' : ''}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
                       <div className={`custom-checkbox ${task.completed ? 'checked' : ''}`}>
-                        {task.completed && <CheckCircle2 size={16} />}
-                        {!task.completed && <Circle size={16} color="#d1d5db" />}
+                        {task.completed ? <CheckCircle2 size={16} /> : <Circle size={16} color="#d1d5db" />}
                       </div>
-                      <span className={`task-text ${task.completed ? 'completed' : ''}`}>
+                      <span className={`friend-task-text ${task.completed ? 'completed' : ''}`}>
                         {task.text}
                       </span>
                     </motion.li>
                   ))}
                 </ul>
               ) : (
-                <div style={{ 
-                  textAlign: 'center', 
-                  padding: '40px', 
-                  color: '#9ca3af',
-                  backgroundColor: '#f9fafb',
-                  borderRadius: '12px',
-                  border: '2px dashed #e5e7eb'
-                }}>
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '40px',
+                    color: '#9ca3af',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '12px',
+                    border: '2px dashed #e5e7eb'
+                  }}
+                >
                   No tasks active right now.
                 </div>
               )}

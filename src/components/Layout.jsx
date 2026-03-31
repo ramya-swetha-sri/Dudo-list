@@ -7,7 +7,7 @@ import './Layout.css';
 import { useTasks } from '../context/TaskContext';
 
 const Layout = () => {
-  const { tasks, user, loading, signout } = useTasks();
+  const { user, loading, signout, friends } = useTasks();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,7 +36,9 @@ const Layout = () => {
     );
   }
 
-  const friendName = tasks?.friends && tasks.friends.length > 0 ? tasks.friends[0].name : "Friend";
+  const friendName = friends.length > 0
+    ? (friends[0].displayName || friends[0].name || 'Friend')
+    : 'Friend';
 
   const navItems = [
     { path: '/my-tasks', label: "My Tasks", icon: User },

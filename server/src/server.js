@@ -55,7 +55,7 @@ const verifyToken = (req, res, next) => {
   try {
     req.user = jwt.verify(token, JWT_SECRET);
     next();
-  } catch (err) {
+  } catch (_err) {
     res.status(401).json({ error: 'Invalid token' });
   }
 };

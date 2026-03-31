@@ -14,6 +14,23 @@ export const TaskProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [friendTasksData, setFriendTasksData] = useState({});
 
+  async function loadUserData() {
+    try {
+      const [tasksData, friendsData, requestsData] = await Promise.all([
+        api.getTasks(),
+        api.getFriends(),
+        api.getFriendRequests()
+      ]);
+
+      setTasks(tasksData);
+      setFriends(friendsData);
+      setFriendRequests(requestsData);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error loading user data:', err);
+    }
+  }
+
   // Check if user is logged in on mount
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -30,23 +47,6 @@ export const TaskProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const loadUserData = async () => {
-    try {
-      const [tasksData, friendsData, requestsData] = await Promise.all([
-        api.getTasks(),
-        api.getFriends(),
-        api.getFriendRequests()
-      ]);
-
-      setTasks(tasksData);
-      setFriends(friendsData);
-      setFriendRequests(requestsData);
-    } catch (err) {
-      setError(err.message);
-      console.error('Error loading user data:', err);
-    }
-  };
-
   // Real-time listeners
   useEffect(() => {
     if (!user) return;
@@ -54,7 +54,11 @@ export const TaskProvider = ({ children }) => {
     // Own task events
     api.onTaskCreated(({ userId, task }) => {
       if (userId === user.id) {
-        setTasks(prev => [task, ...prev]);
+        setTasks(prev => (
+          prev.some((existingTask) => existingTask.id === task.id)
+            ? prev
+            : [task, ...prev]
+        ));
       }
     });
 
@@ -101,7 +105,7 @@ export const TaskProvider = ({ children }) => {
     });
 
     // Friend request events
-    api.onFriendRequestReceived(({ toId, request }) => {
+    api.onFriendRequestReceived(({ toId }) => {
       if (toId === user.id) {
         api.getFriendRequests().then(setFriendRequests);
       }
@@ -210,29 +214,50 @@ export const TaskProvider = ({ children }) => {
 
   const addTask = async (text) => {
     try {
-      await api.createTask(text);
+      setError(null);
+      const createdTask = await api.createTask(text);
+      setTasks(prev => (
+        prev.some((task) => task.id === createdTask.id)
+          ? prev
+          : [createdTask, ...prev]
+      ));
+      return createdTask;
     } catch (err) {
       setError(err.message);
       console.error('Error adding task:', err);
+      return null;
     }
   };
 
   const toggleTask = async (taskId) => {
     try {
+      setError(null);
       const task = tasks.find(t => t.id === taskId);
-      await api.updateTask(taskId, { completed: !task.completed });
+
+      if (!task) {
+        return false;
+      }
+
+      const updatedTask = await api.updateTask(taskId, { completed: !task.completed });
+      setTasks(prev => prev.map((item) => item.id === updatedTask.id ? updatedTask : item));
+      return true;
     } catch (err) {
       setError(err.message);
       console.error('Error toggling task:', err);
+      return false;
     }
   };
 
   const deleteTask = async (taskId) => {
     try {
+      setError(null);
       await api.deleteTask(taskId);
+      setTasks(prev => prev.filter((task) => task.id !== taskId));
+      return true;
     } catch (err) {
       setError(err.message);
       console.error('Error deleting task:', err);
+      return false;
     }
   };
 
@@ -283,14 +308,17 @@ export const TaskProvider = ({ children }) => {
 
   const subscribeFriendTasks = async (friendId) => {
     try {
-      const tasks = await api.getFriendTasks(friendId);
+      setError(null);
+      const friendTasks = await api.getFriendTasks(friendId);
       setFriendTasksData(prev => ({
         ...prev,
-        [friendId]: tasks
+        [friendId]: friendTasks
       }));
+      return friendTasks;
     } catch (err) {
       setError(err.message);
       console.error('Error loading friend tasks:', err);
+      return [];
     }
   };
 
@@ -315,6 +343,7 @@ export const TaskProvider = ({ children }) => {
         rejectFriendRequest,
         removeFriend,
         subscribeFriendTasks,
+        subscribeToFriendTasks: subscribeFriendTasks,
         forgotPassword: forgotPasswordToken,
         resetPassword: performResetPassword,
         getFriendTasks: (friendId) => friendTasksData[friendId] || []
