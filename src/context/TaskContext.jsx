@@ -188,6 +188,26 @@ export const TaskProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const forgotPasswordToken = async (email) => {
+    try {
+      const { resetToken } = await api.forgotPassword(email);
+      return resetToken;
+    } catch (err) {
+      setError(err.message);
+      return null;
+    }
+  };
+
+  const performResetPassword = async (email, resetToken, newPassword) => {
+    try {
+      await api.resetPassword(email, resetToken, newPassword);
+      return true;
+    } catch (err) {
+      setError(err.message);
+      return false;
+    }
+  };
+
   const addTask = async (text) => {
     try {
       await api.createTask(text);
@@ -295,6 +315,8 @@ export const TaskProvider = ({ children }) => {
         rejectFriendRequest,
         removeFriend,
         subscribeFriendTasks,
+        forgotPassword: forgotPasswordToken,
+        resetPassword: performResetPassword,
         getFriendTasks: (friendId) => friendTasksData[friendId] || []
       }}
     >

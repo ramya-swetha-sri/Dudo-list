@@ -102,6 +102,28 @@ export const signin = async (email, password) => {
   return response.json();
 };
 
+export const forgotPassword = async (email) => {
+  const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+
+  if (!response.ok) throw new Error('Password reset request failed');
+  return response.json();
+};
+
+export const resetPassword = async (email, resetToken, newPassword) => {
+  const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, resetToken, newPassword })
+  });
+
+  if (!response.ok) throw new Error('Password reset failed');
+  return response.json();
+};
+
 // ============ TASKS ============
 
 export const getTasks = async () => {

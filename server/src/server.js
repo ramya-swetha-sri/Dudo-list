@@ -136,6 +136,62 @@ app.post('/api/auth/signin', async (req, res) => {
   }
 });
 
+// Forgot password
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Generate a simple 6-digit token for this example
+    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetToken, resetTokenExpires }
+    });
+
+    // In a real app, send email. Here, we'll return it for testing.
+    res.json({ message: 'Reset token generated', resetToken });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Forgot password request failed' });
+  }
+});
+
+// Reset password
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, resetToken, newPassword } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user || user.resetToken !== resetToken || user.resetTokenExpires < new Date()) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpires: null
+      }
+    });
+
+    res.json({ success: true, message: 'Password reset successful' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Reset password failed' });
+  }
+});
+
 // ============ HEALTH CHECK ============
 
 app.get('/api/health', async (req, res) => {
