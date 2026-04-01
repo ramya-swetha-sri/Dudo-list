@@ -7,12 +7,18 @@ export const useTasks = () => useContext(TaskContext);
 
 export const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
+  const [groupTasks, setGroupTasks] = useState([]);
   const [user, setUser] = useState(null);
   const [friends, setFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [friendTasksData, setFriendTasksData] = useState({});
+  const [themes, setThemes] = useState({
+    myTasks: '#ec4899',      // Pink
+    friendTasks: '#2196f3',  // Blue
+    groupTasks: '#10b981'    // Green
+  });
 
   async function loadUserData() {
     try {
@@ -22,7 +28,12 @@ export const TaskProvider = ({ children }) => {
         api.getFriendRequests()
       ]);
 
-      setTasks(tasksData);
+      // Separate personal and group tasks
+      const personalTasks = tasksData.filter(t => t.taskType !== 'group');
+      const groupTasksList = tasksData.filter(t => t.taskType === 'group');
+
+      setTasks(personalTasks);
+      setGroupTasks(groupTasksList);
       setFriends(friendsData);
       setFriendRequests(requestsData);
     } catch (err) {
@@ -40,7 +51,18 @@ export const TaskProvider = ({ children }) => {
     if (token && userId && userData) {
       api.setAuthToken(token, userId);
       api.connectSocket();
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      
+      // Load user themes
+      if (parsedUser.themeColors) {
+        try {
+          setThemes(JSON.parse(parsedUser.themeColors));
+        } catch (e) {
+          console.error('Error parsing themes:', e);
+        }
+      }
+      
       loadUserData();
     }
 
@@ -212,15 +234,24 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  const addTask = async (text) => {
+  const addTask = async (text, taskType = 'personal') => {
     try {
       setError(null);
-      const createdTask = await api.createTask(text);
-      setTasks(prev => (
-        prev.some((task) => task.id === createdTask.id)
-          ? prev
-          : [createdTask, ...prev]
-      ));
+      const createdTask = await api.createTask(text, taskType);
+      
+      if (taskType === 'group') {
+        setGroupTasks(prev => (
+          prev.some((task) => task.id === createdTask.id)
+            ? prev
+            : [createdTask, ...prev]
+        ));
+      } else {
+        setTasks(prev => (
+          prev.some((task) => task.id === createdTask.id)
+            ? prev
+            : [createdTask, ...prev]
+        ));
+      }
       return createdTask;
     } catch (err) {
       setError(err.message);
@@ -229,17 +260,36 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  const addGroupTask = async (text) => {
+    return addTask(text, 'group');
+  };
+
   const toggleTask = async (taskId) => {
     try {
       setError(null);
-      const task = tasks.find(t => t.id === taskId);
+      let task = tasks.find(t => t.id === taskId);
+      let isGroupTask = false;
+
+      if (!task) {
+        task = groupTasks.find(t => t.id === taskId);
+        isGroupTask = true;
+      }
 
       if (!task) {
         return false;
       }
 
       const updatedTask = await api.updateTask(taskId, { completed: !task.completed });
-      setTasks(prev => prev.map((item) => item.id === updatedTask.id ? updatedTask : item));
+      
+      if (isGroupTask) {
+        setGroupTasks(prev =>
+          prev.map(t => t.id === taskId ? updatedTask : t)
+        );
+      } else {
+        setTasks(prev =>
+          prev.map(t => t.id === taskId ? updatedTask : t)
+        );
+      }
       return true;
     } catch (err) {
       setError(err.message);
@@ -252,7 +302,9 @@ export const TaskProvider = ({ children }) => {
     try {
       setError(null);
       await api.deleteTask(taskId);
+      
       setTasks(prev => prev.filter((task) => task.id !== taskId));
+      setGroupTasks(prev => prev.filter((task) => task.id !== taskId));
       return true;
     } catch (err) {
       setError(err.message);
@@ -322,19 +374,63 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (updates) => {
+    try {
+      setError(null);
+      const updatedUser = await api.updateProfile(updates);
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Update themes if themeColors is returned
+      if (updatedUser.themeColors) {
+        try {
+          setThemes(JSON.parse(updatedUser.themeColors));
+        } catch (e) {
+          console.error('Error parsing themes:', e);
+        }
+      }
+      
+      return true;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating profile:', err);
+      return false;
+    }
+  };
+
+  const updateThemes = async (newThemes) => {
+    try {
+      setError(null);
+      const updatedUser = await api.updateProfile({ 
+        themeColors: JSON.stringify(newThemes) 
+      });
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setThemes(newThemes);
+      return true;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating themes:', err);
+      return false;
+    }
+  };
+
   return (
     <TaskContext.Provider
       value={{
         tasks,
+        groupTasks,
         friends,
         friendRequests,
         user,
         loading,
         error,
+        themes,
         signup,
         signin,
         signout,
         addTask,
+        addGroupTask,
         toggleTask,
         deleteTask,
         searchUsers,
@@ -346,6 +442,8 @@ export const TaskProvider = ({ children }) => {
         subscribeToFriendTasks: subscribeFriendTasks,
         forgotPassword: forgotPasswordToken,
         resetPassword: performResetPassword,
+        updateProfile,
+        updateThemes,
         getFriendTasks: (friendId) => friendTasksData[friendId] || []
       }}
     >

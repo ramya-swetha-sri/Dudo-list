@@ -1,9 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import TaskList from '../components/TaskList';
+import { useTasks } from '../context/TaskContext';
 import './GroupTasks.css';
 
 const GroupTasks = () => {
+  const { themes } = useTasks();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -11,6 +14,7 @@ const GroupTasks = () => {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
       className="group-tasks-container"
+      style={{ '--title-color': themes.groupTasks || '#10b981' }}
     >
       <div className="group-content">
         <div className="task-section">
@@ -18,6 +22,7 @@ const GroupTasks = () => {
             type="groupTasks" 
             title="Group Vibe" 
             subtitle="Tackle these challenges together"
+            themeColor={themes.groupTasks}
           />
         </div>
         

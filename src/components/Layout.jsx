@@ -45,6 +45,7 @@ const Layout = () => {
     { path: '/friend-tasks', label: `${friendName}'s tasks`, icon: Users },
     { path: '/group-tasks', label: 'Group Vibe', icon: Music },
     { path: '/pomodoro', label: 'Pomodoro Clock', icon: Clock },
+    { path: '/profile', label: 'Profile', icon: User },
   ];
 
   return (
