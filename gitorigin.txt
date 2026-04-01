@@ -1,0 +1,14 @@
+0163025 Refactor code structure for improved readability and maintainability
+3a9eb24 feat: Implement real-time task updates with Socket.io and PostgreSQL integration
+42ab76e feat: add troubleshooting guide for Firebase to PostgreSQL migration
+add2de6 chore: Add Vercel deployment configuration
+a4e3357 fix: Enable real-time task sync across devices
+93bff5f feat: Add Firebase Firestore integration and friend system
+8eba7bb Revert Leaderboard to notebook theme and remove pixel animals
+9fdf014 Revert universal top nav, redesign Leaderboard glassmorphism theme, add Leaderboard link in Pomodoro
+ee59a1a Add global top nav bar and Leaderboard with roaming pixel animals
+b84d3d5 Pomodoro: Add sleek top nav bar for options and routing
+179dae7 Pomodoro: Make full screen, remove glass filters, add pixel font
+6b59508 Fix hero title overlap and spacing
+0723a9a Update Pomodoro clock with video backgrounds
+a87d788 feat: Add personalized tasks, timer, animations, and redesigns
