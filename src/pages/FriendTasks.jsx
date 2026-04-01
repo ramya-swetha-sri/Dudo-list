@@ -1,237 +1,203 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Trash2 } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Trash2, Users, CheckCircle2, Circle } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import AddFriend from '../components/AddFriend';
 import FriendRequests from '../components/FriendRequests';
-import TaskList from '../components/TaskList';
+import './FriendTasks.css';
 
 const FriendTasks = () => {
-  const { friends, removeFriend, subscribeToFriendTasks } = useTasks();
+  const { friends, removeFriend, subscribeFriendTasks, getFriendTasks } = useTasks();
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
-  const [friendTasksData, setFriendTasksData] = useState(null);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
 
-  // Subscribe to friend's tasks when friend is selected
-  useEffect(() => {
-    if (!selectedFriendId) return;
-
-    // Subscribe to friend's tasks with real-time updates
-    const unsubscribe = subscribeToFriendTasks(selectedFriendId, (tasksData) => {
-      setFriendTasksData(tasksData);
-    });
-
-    // Cleanup subscription when friend changes or component unmounts
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [selectedFriendId, subscribeToFriendTasks]);
-
-  // Auto-select first friend if available
   useEffect(() => {
     if (friends.length > 0 && !selectedFriendId) {
       setSelectedFriendId(friends[0].id);
     }
   }, [friends, selectedFriendId]);
 
-  const selectedFriend = friends.find(f => f.id === selectedFriendId);
+  useEffect(() => {
+    let isActive = true;
+
+    const loadFriendTasks = async () => {
+      if (!selectedFriendId) return;
+
+      setIsLoadingTasks(true);
+      await subscribeFriendTasks(selectedFriendId);
+
+      if (isActive) {
+        setIsLoadingTasks(false);
+      }
+    };
+
+    loadFriendTasks();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedFriendId, subscribeFriendTasks]);
+
+  const selectedFriend = friends.find((friend) => friend.id === selectedFriendId);
+  const friendTasks = useMemo(() => {
+    if (!selectedFriendId) {
+      return [];
+    }
+
+    return getFriendTasks(selectedFriendId);
+  }, [getFriendTasks, selectedFriendId]);
+
+  const handleRemoveFriend = async () => {
+    if (!selectedFriend || !window.confirm(`Are you sure you want to remove ${selectedFriend.displayName}?`)) {
+      return;
+    }
+
+    await removeFriend(selectedFriendId);
+
+    if (friends.length > 1) {
+      const otherFriend = friends.find((friend) => friend.id !== selectedFriendId);
+      setSelectedFriendId(otherFriend?.id || null);
+    } else {
+      setSelectedFriendId(null);
+    }
+  };
 
   if (friends.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.4 }}
-        style={{ padding: '32px' }}
-      >
+      <div className="friend-tasks-container">
         <FriendRequests />
-        
-        <div style={{
-          textAlign: 'center',
-          padding: '60px 32px',
-          backgroundColor: '#f5f5f5',
-          borderRadius: '12px'
-        }}>
-          <h2 style={{ marginBottom: '16px' }}>No friends yet!</h2>
-          <p style={{ color: '#666', marginBottom: '24px' }}>
-            Search for friends by email and add them to see their tasks
+
+        <motion.div
+          className="empty-state"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="empty-state-icon">
+            <Users size={40} />
+          </div>
+          <h2>No friends yet!</h2>
+          <p>
+            Search for friends by email and add them to see their tasks and cheer each other on!
           </p>
           <button
+            className="big-add-btn"
             onClick={() => setShowAddFriend(true)}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#4F46E5',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '16px'
-            }}
           >
-            <Plus size={20} />
-            Add Friend
+            <Plus size={22} />
+            Find Friends
           </button>
-        </div>
+        </motion.div>
 
         {showAddFriend && (
           <AddFriend onClose={() => setShowAddFriend(false)} />
         )}
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      transition={{ duration: 0.4 }}
-      style={{ padding: '32px' }}
-    >
+    <div className="friend-tasks-container">
       <FriendRequests />
 
-      {/* Friends list */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '16px'
-        }}>
-          <h2 style={{ margin: 0 }}>Your Friends</h2>
+      <section className="friends-section">
+        <div className="friends-header">
+          <h2>Your Friends</h2>
           <button
+            className="add-friend-btn"
             onClick={() => setShowAddFriend(true)}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#4F46E5',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
           >
             <Plus size={18} />
-            Add
+            Add Friend
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div className="friends-scroll-container">
           {friends.map((friend) => (
             <button
               key={friend.id}
+              className={`friend-pill ${selectedFriendId === friend.id ? 'active' : ''}`}
               onClick={() => setSelectedFriendId(friend.id)}
-              style={{
-                padding: '10px 16px',
-                backgroundColor: selectedFriendId === friend.id ? '#4F46E5' : '#f5f5f5',
-                color: selectedFriendId === friend.id ? 'white' : '#333',
-                border: selectedFriendId === friend.id ? '2px solid #4F46E5' : '1px solid #ddd',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
             >
               {friend.displayName}
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Friend's tasks */}
-      {selectedFriend && friendTasksData && (
-        <div>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px'
-          }}>
-            <div>
-              <h1 style={{ margin: '0 0 8px 0' }}>{selectedFriend.displayName}'s Tasks</h1>
-              <p style={{ margin: 0, color: '#666' }}>Cheer {selectedFriend.displayName} on!</p>
+      <AnimatePresence mode="wait">
+        {selectedFriend && (
+          <motion.div
+            key={selectedFriendId}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="friend-content-header">
+              <div className="friend-info">
+                <h1>{selectedFriend.displayName}'s Tasks</h1>
+                <p>Support {selectedFriend.displayName} by watching their progress!</p>
+              </div>
+              <button className="remove-friend-btn" onClick={handleRemoveFriend}>
+                <Trash2 size={18} />
+                <span>Remove</span>
+              </button>
             </div>
-            <button
-              onClick={() => {
-                removeFriend(selectedFriendId);
-                if (friends.length > 1) {
-                  setSelectedFriendId(friends[0].id);
-                } else {
-                  setSelectedFriendId(null);
-                }
-              }}
-              style={{
-                padding: '8px 12px',
-                backgroundColor: '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <Trash2 size={16} />
-              Remove
-            </button>
-          </div>
 
-          {/* Display friend's tasks (read-only) */}
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            padding: '16px',
-            border: '1px solid #e0e0e0'
-          }}>
-            <h3 style={{ marginTop: 0 }}>Tasks</h3>
-            {friendTasksData.myTasks && friendTasksData.myTasks.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {friendTasksData.myTasks.map((task) => (
-                  <li
-                    key={task.id}
-                    style={{
-                      padding: '12px',
-                      borderBottom: '1px solid #e0e0e0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px'
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      disabled
-                      style={{ cursor: 'not-allowed' }}
-                    />
-                    <span
-                      style={{
-                        textDecoration: task.completed ? 'line-through' : 'none',
-                        color: task.completed ? '#999' : '#333'
-                      }}
+            <div className="tasks-card">
+              <h3>
+                <CheckCircle2 size={24} color="#10b981" />
+                Live Task Board
+              </h3>
+
+              {isLoadingTasks ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                  Loading tasks...
+                </div>
+              ) : friendTasks.length > 0 ? (
+                <ul className="friend-task-list">
+                  {friendTasks.map((task, index) => (
+                    <motion.li
+                      key={task.id}
+                      className={`friend-task-item ${task.completed ? 'completed' : ''}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
                     >
-                      {task.text}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ color: '#999' }}>No tasks yet</p>
-            )}
-          </div>
-        </div>
-      )}
+                      <div className={`custom-checkbox ${task.completed ? 'checked' : ''}`}>
+                        {task.completed ? <CheckCircle2 size={16} /> : <Circle size={16} color="#d1d5db" />}
+                      </div>
+                      <span className={`friend-task-text ${task.completed ? 'completed' : ''}`}>
+                        {task.text}
+                      </span>
+                    </motion.li>
+                  ))}
+                </ul>
+              ) : (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '40px',
+                    color: '#9ca3af',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '12px',
+                    border: '2px dashed #e5e7eb'
+                  }}
+                >
+                  No tasks active right now.
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showAddFriend && (
         <AddFriend onClose={() => setShowAddFriend(false)} />
       )}
-    </motion.div>
+    </div>
   );
 };
 

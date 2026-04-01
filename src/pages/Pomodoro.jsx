@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Pause, RotateCcw, Image as ImageIcon, Maximize, Minimize, CheckSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';

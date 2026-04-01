@@ -21,7 +21,7 @@ const AddFriend = ({ onClose }) => {
     try {
       const result = await searchUsers(email);
       if (result) {
-        if (result.id === user.uid) {
+        if (result.id === user.id) {
           setMessage("🙃 That's you!");
         } else {
           setSearchResult(result);
@@ -29,7 +29,7 @@ const AddFriend = ({ onClose }) => {
       } else {
         setMessage('User not found');
       }
-    } catch (err) {
+    } catch {
       setMessage('Error searching user');
     } finally {
       setLoading(false);
@@ -45,7 +45,7 @@ const AddFriend = ({ onClose }) => {
       setTimeout(() => {
         onClose();
       }, 1500);
-    } catch (err) {
+    } catch {
       setMessage('Error sending friend request');
     } finally {
       setLoading(false);

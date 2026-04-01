@@ -2,24 +2,55 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 1rem;
-  /* Align task container spacing to the notebook lines */
-  padding-top: 0; 
+  padding-top: 0;
 }
 
-.text-4xl { font-size: 3rem; color: var(--accent-secondary); line-height: var(--line-height); }
+.task-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.text-4xl {
+  font-size: 3rem;
+  color: var(--accent-secondary);
+  line-height: var(--line-height);
+  margin: 0;
+}
+
 .font-bold { font-weight: 700; }
 .mt-2 { margin-top: 0; line-height: var(--line-height); }
-.mb-8 { margin-bottom: 2rem; }
 .mt-8 { margin-top: 2rem; }
 .text-secondary { color: var(--text-secondary); }
 
-.add-task-form {
-  display: flex;
-  padding: 0;
+.task-entry-wrapper {
   margin-bottom: 2rem;
+}
+
+.task-entry-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 0;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+.entry-checkbox {
+  cursor: pointer;
+}
+
+.entry-checkbox:hover {
+  border-color: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.entry-hint {
+  margin: 0.35rem 0 0 2.3rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 .task-input {
@@ -27,7 +58,7 @@
   background: transparent;
   border: none;
   border-bottom: 2px dashed var(--accent-secondary);
-  color: var(--accent-secondary); /* Blue ink when typing */
+  color: var(--accent-secondary);
   padding: 0;
   font-size: 1.5rem;
   outline: none;
@@ -39,22 +70,6 @@
   color: #999;
 }
 
-.add-btn {
-  background: transparent;
-  color: var(--accent-secondary);
-  width: 40px;
-  height: 40px;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.add-btn:hover {
-  transform: scale(1.1);
-  color: var(--text-primary);
-}
-
 .task-list {
   display: flex;
   flex-direction: column;
@@ -62,10 +77,10 @@
 
 .task-item {
   display: flex;
-  align-items: flex-end; /* Align text at bottom of the line */
+  align-items: flex-end;
   padding: 0;
   gap: 1rem;
-  height: var(--line-height);
+  min-height: var(--line-height);
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -80,49 +95,45 @@
 .checkbox {
   width: 24px;
   height: 24px;
-  margin-bottom: 4px; /* align with bottom of line */
+  margin-bottom: 4px;
   border: 2px solid var(--text-primary);
-  background: #fff; /* white square on the lines */
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
   color: transparent;
+  border-radius: 6px;
 }
 
 .checkbox.checked {
-  color: var(--accent-secondary); /* checkmark in blue ink */
+  color: var(--accent-secondary);
 }
 
 .task-item:not(.readonly) .checkbox:hover {
   border-color: var(--accent-secondary);
 }
 
-.task-text {
-  flex: 1;
-  font-size: 1.5rem;
-  color: var(--accent-secondary); /* blue ink */
-  transition: color 0.2s;
-  line-height: var(--line-height);
-}
-
-.completed .task-text {
-  color: var(--text-secondary);
-}
-
-.task-item .task-text-container {
+.task-text-container {
   flex: 1;
   display: flex;
+  align-items: center;
 }
 
-.task-item .task-text {
+.task-text {
   font-size: 1.5rem;
   color: var(--accent-secondary);
   transition: color 0.2s;
   line-height: var(--line-height);
   position: relative;
   display: inline-block;
-  padding: 0 4px;
+  padding: 0 6px;
+}
+
+.task-item.completed .task-text {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
 }
 
 .task-item.completed .task-text::after {
@@ -130,26 +141,22 @@
   position: absolute;
   top: 55%;
   left: 0;
-  width: 0;
-  height: 45%;
-  background: var(--hl-color, #ffb3ba);
-  opacity: 0.5;
-  border-radius: 4px;
+  right: 0;
+  height: 48%;
+  background: var(--hl-color, rgba(255, 105, 180, 0.5));
+  opacity: 0.6;
+  border-radius: 6px;
   transform: translateY(-50%) rotate(-1deg);
-  animation: highlight 0.4s ease-out forwards;
   pointer-events: none;
-}
-
-@keyframes highlight {
-  to { width: 100%; }
+  z-index: -1;
 }
 
 .task-item.highlighter-pink {
-  --hl-color: #ff69b4;
+  --hl-color: rgba(255, 105, 180, 0.55);
 }
 
 .task-item.highlighter-blue {
-  --hl-color: #64b5f6;
+  --hl-color: rgba(100, 181, 246, 0.55);
 }
 
 .delete-btn {
@@ -171,7 +178,7 @@
   color: var(--text-primary);
   margin-bottom: 1rem;
   font-weight: bold;
-  height: var(--line-height);
+  min-height: var(--line-height);
   display: flex;
   align-items: flex-end;
 }
@@ -180,29 +187,10 @@
   cursor: default;
 }
 
-.minimal-add-btn {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
-  margin: 0 auto;
+.empty-task-state {
+  margin-top: 1rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  padding-left: 2.3rem;
 }
-.minimal-add-btn:hover {
-  transform: scale(1.1);
-  background: rgba(255,255,255,0.3);
-  color: var(--text-primary);
-}
-
-.flex { display: flex; }
-.justify-center { justify-content: center; }
-.w-full { width: 100%; }
-.mb-8 { margin-bottom: 2rem; }
 

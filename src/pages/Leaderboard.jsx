@@ -5,18 +5,17 @@ import { useTasks } from '../context/TaskContext';
 import './Leaderboard.css';
 
 const Leaderboard = () => {
-  const { tasks } = useTasks();
+  const { tasks, friends, getFriendTasks } = useTasks();
 
-  // swayyy's metrics
-  const myTasksList = tasks.myTasks || [];
+  const myTasksList = Array.isArray(tasks) ? tasks : [];
   const swayyyTotal = myTasksList.length;
   const swayyyCompleted = myTasksList.filter(t => t.completed).length;
   const swayyyHasStar = swayyyTotal > 0 && swayyyCompleted === swayyyTotal;
 
-  // friend's metrics
-  const friendId = tasks.friends?.length > 0 ? tasks.friends[0].id : null;
-  const friendName = tasks.friends?.length > 0 ? tasks.friends[0].name : "kayyy";
-  const friendTasksList = friendId ? (tasks[`friend_${friendId}`] || []) : [];
+  const primaryFriend = friends[0] || null;
+  const friendId = primaryFriend?.id || null;
+  const friendName = primaryFriend?.displayName || primaryFriend?.name || 'kayyy';
+  const friendTasksList = friendId ? getFriendTasks(friendId) : [];
   const friendTotal = friendTasksList.length;
   const friendCompleted = friendTasksList.filter(t => t.completed).length;
   const friendHasStar = friendTotal > 0 && friendCompleted === friendTotal;
