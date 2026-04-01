@@ -1,0 +1,4 @@
+origin	https://github.com/Keerthi-Kireeti/Dudo-list.git (fetch)
+origin	https://github.com/Keerthi-Kireeti/Dudo-list.git (push)
+ramya	https://github.com/ramya-swetha-sri/Dudo-list.git (fetch)
+ramya	https://github.com/ramya-swetha-sri/Dudo-list.git (push)
