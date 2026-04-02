@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { sendFriendRequestEmail, sendFriendRequestAcceptedEmail } from './services/emailService.js';
 
 dotenv.config();
 
@@ -192,6 +193,32 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
+// Update profile
+app.put('/api/profile', verifyToken, async (req, res) => {
+  try {
+    const { displayName, themeColors } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        ...(displayName && { displayName }),
+        ...(themeColors && { themeColors })
+      }
+    });
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      themeColors: user.themeColors,
+      createdAt: user.createdAt
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
 // ============ HEALTH CHECK ============
 
 app.get('/api/health', async (req, res) => {
@@ -226,11 +253,12 @@ app.get('/api/tasks', verifyToken, async (req, res) => {
 // Create task
 app.post('/api/tasks', verifyToken, async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, taskType = 'personal' } = req.body;
 
     const task = await prisma.task.create({
       data: {
         text,
+        taskType,
         userId: req.user.id
       }
     });
@@ -239,7 +267,7 @@ app.post('/api/tasks', verifyToken, async (req, res) => {
     io.to(`user:${req.user.id}`).emit('task:created', { userId: req.user.id, task });
     io.emit('friend-task:created', { userId: req.user.id, task });
 
-    console.log(`Task created: ${task.id} by user ${req.user.id}`);
+    console.log(`Task created: ${task.id} by user ${req.user.id} - Type: ${taskType}`);
     res.json(task);
   } catch (err) {
     console.error('Error creating task:', err.message);
@@ -370,6 +398,20 @@ app.post('/api/friend-requests', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Cannot add yourself' });
     }
 
+    // Get recipient user
+    const recipient = await prisma.user.findUnique({
+      where: { id: toId }
+    });
+
+    if (!recipient) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get requester user
+    const requester = await prisma.user.findUnique({
+      where: { id: req.user.id }
+    });
+
     const request = await prisma.friendRequest.create({
       data: {
         fromId: req.user.id,
@@ -381,6 +423,10 @@ app.post('/api/friend-requests', verifyToken, async (req, res) => {
         }
       }
     });
+
+    // Send email notification
+    const requesterName = requester.displayName || requester.email.split('@')[0];
+    await sendFriendRequestEmail(recipient.email, requesterName, requester.email);
 
     // Emit to recipient's room specifically
     io.to(`user:${toId}`).emit('friendRequest:received', {
@@ -433,6 +479,15 @@ app.post('/api/friend-requests/:id/accept', verifyToken, async (req, res) => {
       data: { status: 'accepted' }
     });
 
+    // Get both users
+    const requester = await prisma.user.findUnique({
+      where: { id: request.fromId }
+    });
+
+    const acceptor = await prisma.user.findUnique({
+      where: { id: request.toId }
+    });
+
     // Add each other as friends
     await prisma.user.update({
       where: { id: request.fromId },
@@ -451,6 +506,10 @@ app.post('/api/friend-requests/:id/accept', verifyToken, async (req, res) => {
         }
       }
     });
+
+    // Send email notification to requester
+    const acceptorName = acceptor.displayName || acceptor.email.split('@')[0];
+    await sendFriendRequestAcceptedEmail(requester.email, acceptorName);
 
     // Emit to both users' rooms specifically
     io.to(`user:${request.fromId}`).emit('friendRequest:accepted', {

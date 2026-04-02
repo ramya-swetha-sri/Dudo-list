@@ -21,6 +21,10 @@ model User {
   resetToken        String?
   resetTokenExpires DateTime?
 
+  // Color themes for different sections (stored as JSON)
+  // Example: { "myTasks": "#ec4899", "friendTasks": "#2196f3", "groupTasks": "#10b981" }
+  themeColors   String @default("{\"myTasks\": \"#ec4899\", \"friendTasks\": \"#2196f3\", \"groupTasks\": \"#10b981\"}")
+
   // Tasks owned by this user
   tasks         Task[]
 
@@ -41,6 +45,7 @@ model Task {
   id        String   @id @default(cuid())
   text      String
   completed Boolean  @default(false)
+  taskType  String   @default("personal") // personal, group
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -48,6 +53,7 @@ model Task {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([taskType])
 }
 
 model FriendRequest {

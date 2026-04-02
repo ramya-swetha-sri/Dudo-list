@@ -82,12 +82,15 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 3px solid #64b5f6;
 }
 
 .friend-info h1 {
   margin: 0 0 8px 0;
   font-size: 2rem;
-  color: #111827;
+  color: #2196f3;
+  font-weight: 800;
 }
 
 .friend-info p {

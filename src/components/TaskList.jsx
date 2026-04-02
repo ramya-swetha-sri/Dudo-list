@@ -5,20 +5,27 @@ import { Check, Trash2, Circle } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import './TaskList.css';
 
-const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false }) => {
-  const { tasks, addTask, toggleTask, deleteTask } = useTasks();
+const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false, themeColor }) => {
+  const { tasks, groupTasks, addTask, addGroupTask, toggleTask, deleteTask, themes } = useTasks();
   const [newTaskText, setNewTaskText] = useState('');
   const inputRef = useRef(null);
 
+  // Use themeColor prop if provided, otherwise use context themes
+  const titleColor = themeColor || (type === 'myTasks' ? themes.myTasks : type === 'friendTasks' ? themes.friendTasks : themes.groupTasks);
+
   const currentTasks = useMemo(() => {
+    if (type === 'groupTasks') {
+      return Array.isArray(groupTasks) ? groupTasks : [];
+    }
+    
     if (Array.isArray(tasks)) {
       return tasks;
     }
 
     return tasks?.[type] || [];
-  }, [tasks, type]);
+  }, [tasks, groupTasks, type]);
 
-  const highlighterClass = type === 'myTasks' ? 'highlighter-pink' : 'highlighter-blue';
+  const highlighterClass = type === 'friendTasks' ? 'highlighter-blue' : 'highlighter-pink';
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -28,7 +35,11 @@ const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false }) => {
       return;
     }
 
-    await addTask(trimmedText);
+    if (type === 'groupTasks') {
+      await addGroupTask(trimmedText);
+    } else {
+      await addTask(trimmedText);
+    }
     setNewTaskText('');
     requestAnimationFrame(() => inputRef.current?.focus());
   };
@@ -43,7 +54,7 @@ const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false }) => {
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#6366f1', '#ec4899', '#10b981']
+        colors: [titleColor, '#10b981', '#6366f1']
       });
     }
   };
@@ -53,9 +64,9 @@ const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false }) => {
 
   return (
     <div className="task-container">
-      <div className="task-header">
+      <div className="task-header" style={{ borderBottomColor: titleColor }}>
         <div>
-          <h1 className="text-4xl font-bold bg-clip-text gradient-text">{title}</h1>
+          <h1 className="text-4xl font-bold" style={{ color: titleColor }}>{title}</h1>
           {subtitle && <p className="text-secondary mt-2">{subtitle}</p>}
         </div>
       </div>
@@ -91,7 +102,7 @@ const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false }) => {
                 onToggle={() => handleToggle(task)}
                 onDelete={() => deleteTask(task.id)}
                 readonly={readonly}
-                highlighterClass={highlighterClass}
+                themeColor={titleColor}
               />
             ))}
           </AnimatePresence>
@@ -109,7 +120,7 @@ const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false }) => {
                     onToggle={() => handleToggle(task)}
                     onDelete={() => deleteTask(task.id)}
                     readonly={readonly}
-                    highlighterClass={highlighterClass}
+                    themeColor={titleColor}
                   />
                 ))}
               </AnimatePresence>
@@ -127,7 +138,7 @@ const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false }) => {
   );
 };
 
-const TaskItem = ({ task, onToggle, onDelete, readonly, highlighterClass }) => {
+const TaskItem = ({ task, onToggle, onDelete, readonly, themeColor }) => {
   const [showMark, setShowMark] = useState(false);
 
   const handleToggle = () => {
@@ -148,7 +159,10 @@ const TaskItem = ({ task, onToggle, onDelete, readonly, highlighterClass }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2 }}
-      className={`task-item glass-panel ${task.completed ? 'completed' : ''} ${readonly ? 'readonly' : ''} relative ${highlighterClass}`}
+      className={`task-item glass-panel ${task.completed ? 'completed' : ''} ${readonly ? 'readonly' : ''} relative`}
+      style={{
+        '--hl-color': `${themeColor}33`
+      }}
     >
       {showMark && (
         <motion.div
@@ -159,12 +173,12 @@ const TaskItem = ({ task, onToggle, onDelete, readonly, highlighterClass }) => {
             position: 'absolute',
             left: 20,
             top: -20,
-            color: '#10b981',
+            color: themeColor,
             fontWeight: '900',
             fontSize: '1.8rem',
             pointerEvents: 'none',
             zIndex: 50,
-            textShadow: '0 2px 10px rgba(16, 185, 129, 0.4)'
+            textShadow: `0 2px 10px ${themeColor}66`
           }}
         >
           +100
@@ -175,12 +189,18 @@ const TaskItem = ({ task, onToggle, onDelete, readonly, highlighterClass }) => {
         className={`checkbox ${task.completed ? 'checked' : ''}`}
         onClick={handleToggle}
         disabled={readonly}
+        style={{
+          borderColor: task.completed ? themeColor : 'var(--text-primary)',
+          color: themeColor
+        }}
       >
         {task.completed ? <Check size={16} strokeWidth={3} /> : <Circle size={16} color="var(--border-color)" />}
       </button>
 
       <span className="task-text-container">
-        <span className="task-text">{task.text}</span>
+        <span className="task-text" style={{ color: task.completed ? 'var(--text-secondary)' : themeColor }}>
+          {task.text}
+        </span>
       </span>
 
       {!readonly && (

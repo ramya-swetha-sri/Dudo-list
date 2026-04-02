@@ -7,6 +7,7 @@ import FriendTasks from './pages/FriendTasks';
 import GroupTasks from './pages/GroupTasks';
 import Pomodoro from './pages/Pomodoro';
 import Leaderboard from './pages/Leaderboard';
+import Profile from './pages/Profile';
 import Layout from './components/Layout';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="/group-tasks" element={<GroupTasks />} />
           <Route path="/pomodoro" element={<Pomodoro />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
     </TaskProvider>

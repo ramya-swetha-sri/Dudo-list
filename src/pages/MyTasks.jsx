@@ -1,8 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import TaskList from '../components/TaskList';
+import { useTasks } from '../context/TaskContext';
 
 const MyTasks = () => {
+  const { user, themes } = useTasks();
+  const userName = user?.displayName || 'Tasks';
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -12,8 +16,9 @@ const MyTasks = () => {
     >
       <TaskList 
         type="myTasks" 
-        title="swayyy's tasks" 
+        title={`${userName}'s Tasks`}
         subtitle="Crush your individual goals today!"
+        themeColor={themes.myTasks}
       />
     </motion.div>
   );

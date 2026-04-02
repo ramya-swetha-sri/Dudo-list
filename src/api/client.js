@@ -150,6 +150,17 @@ export const resetPassword = async (email, resetToken, newPassword) => {
   return response.json();
 };
 
+export const updateProfile = async (updates) => {
+  const response = await fetch(`${API_BASE_URL}/api/profile`, {
+    method: 'PUT',
+    headers: getAuthHeader(),
+    body: JSON.stringify(updates)
+  });
+
+  if (!response.ok) throw new Error('Failed to update profile');
+  return response.json();
+};
+
 // ============ TASKS ============
 
 export const getTasks = async () => {
@@ -161,11 +172,11 @@ export const getTasks = async () => {
   return response.json();
 };
 
-export const createTask = async (text) => {
+export const createTask = async (text, taskType = 'personal') => {
   const response = await fetch(`${API_BASE_URL}/api/tasks`, {
     method: 'POST',
     headers: getAuthHeader(),
-    body: JSON.stringify({ text })
+    body: JSON.stringify({ text, taskType })
   });
 
   if (!response.ok) throw new Error('Failed to create task');
