@@ -104,17 +104,24 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
-    // Friend request events
-    api.onFriendRequestReceived(({ toId }) => {
+    // Friend request events - Real-time updates
+    api.onFriendRequestReceived(({ toId, request }) => {
       if (toId === user.id) {
-        api.getFriendRequests().then(setFriendRequests);
+        // Optimistic update: add the new request immediately for instant feedback
+        setFriendRequests(prev => [request, ...prev]);
       }
     });
 
     api.onFriendRequestAccepted(({ userId, friendId }) => {
       if (userId === user.id || friendId === user.id) {
+        // Fetch updated friends list for both users
         api.getFriends().then(setFriends);
       }
+    });
+
+    api.onFriendRequestRejected(({ requestId }) => {
+      // Remove the rejected request from UI immediately
+      setFriendRequests(prev => prev.filter(req => req.id !== requestId));
     });
 
     api.onFriendRemoved(({ userId, friendId }) => {
@@ -141,6 +148,7 @@ export const TaskProvider = ({ children }) => {
       api.offFriendTaskDeleted();
       api.offFriendRequestReceived();
       api.offFriendRequestAccepted();
+      api.offFriendRequestRejected();
       api.offFriendRemoved();
       api.offUserOnline();
       api.offUserOffline();
@@ -281,8 +289,18 @@ export const TaskProvider = ({ children }) => {
 
   const acceptFriendRequest = async (requestId) => {
     try {
+      // Optimistic update - remove from requests immediately
+      const previousRequests = friendRequests;
+      setFriendRequests(prev => prev.filter(req => req.id !== requestId));
+      
       await api.acceptFriendRequest(requestId);
+      
+      // Fetch updated friends list
+      const updatedFriends = await api.getFriends();
+      setFriends(updatedFriends);
     } catch (err) {
+      // Revert optimistic update on error
+      setFriendRequests(previousRequests);
       setError(err.message);
       console.error('Error accepting friend request:', err);
     }
@@ -290,8 +308,14 @@ export const TaskProvider = ({ children }) => {
 
   const rejectFriendRequest = async (requestId) => {
     try {
+      // Optimistic update - remove from requests immediately
+      const previousRequests = friendRequests;
+      setFriendRequests(prev => prev.filter(req => req.id !== requestId));
+      
       await api.rejectFriendRequest(requestId);
     } catch (err) {
+      // Revert optimistic update on error
+      setFriendRequests(previousRequests);
       setError(err.message);
       console.error('Error rejecting friend request:', err);
     }

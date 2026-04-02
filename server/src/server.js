@@ -374,14 +374,22 @@ app.post('/api/friend-requests', verifyToken, async (req, res) => {
       data: {
         fromId: req.user.id,
         toId
+      },
+      include: {
+        from: {
+          select: { id: true, email: true, displayName: true }
+        }
       }
     });
 
-    // Emit to recipient
-    io.emit('friendRequest:received', {
+    // Emit to recipient's room specifically
+    io.to(`user:${toId}`).emit('friendRequest:received', {
       toId,
+      fromId: request.fromId,
       request: {
         id: request.id,
+        displayName: request.from.displayName,
+        email: request.from.email,
         fromId: request.fromId
       }
     });
@@ -444,8 +452,13 @@ app.post('/api/friend-requests/:id/accept', verifyToken, async (req, res) => {
       }
     });
 
-    // Emit to both users
-    io.emit('friendRequest:accepted', {
+    // Emit to both users' rooms specifically
+    io.to(`user:${request.fromId}`).emit('friendRequest:accepted', {
+      userId: request.fromId,
+      friendId: request.toId
+    });
+
+    io.to(`user:${request.toId}`).emit('friendRequest:accepted', {
       userId: request.fromId,
       friendId: request.toId
     });
@@ -462,7 +475,21 @@ app.post('/api/friend-requests/:id/reject', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
 
+    const request = await prisma.friendRequest.findUnique({
+      where: { id }
+    });
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
     await prisma.friendRequest.delete({ where: { id } });
+
+    // Notify both users that request was rejected
+    io.to(`user:${request.fromId}`).emit('friendRequest:rejected', {
+      requestId: id,
+      rejectedByUserId: request.toId
+    });
 
     res.json({ success: true });
   } catch (err) {
@@ -485,7 +512,13 @@ app.post('/api/friends/:friendId/remove', verifyToken, async (req, res) => {
       }
     });
 
-    io.emit('friend:removed', {
+    // Notify both users in their specific rooms
+    io.to(`user:${req.user.id}`).emit('friend:removed', {
+      userId: req.user.id,
+      friendId
+    });
+
+    io.to(`user:${friendId}`).emit('friend:removed', {
       userId: req.user.id,
       friendId
     });

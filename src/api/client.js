@@ -2,13 +2,23 @@ import io from 'socket.io-client';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+// Validate and normalize the API URL
+const normalizeApiUrl = (url) => {
+  if (!url) return 'http://localhost:3000';
+  // Remove trailing slash if present
+  return url.replace(/\/$/, '');
+};
+
+const NORMALIZED_URL = normalizeApiUrl(API_BASE_URL);
+
 // Initialize socket but don't connect yet (will connect on login)
-const socket = io(API_BASE_URL, {
+const socket = io(NORMALIZED_URL, {
   autoConnect: false,
   reconnection: true,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
-  reconnectionAttempts: 5
+  reconnectionAttempts: 5,
+  transports: ['websocket', 'polling'] // Fallback to polling if WebSocket fails
 });
 
 // Store auth token and user
@@ -51,7 +61,7 @@ export const disconnectSocket = () => {
 
 // Socket connection event handlers
 socket.on('connect', () => {
-  console.log('✓ Connected to server');
+  console.log('✓ Connected to server at', NORMALIZED_URL);
   isSocketConnected = true;
   if (authToken && currentUserId) {
     socket.emit('user:join', { userId: currentUserId, token: authToken });
@@ -60,15 +70,31 @@ socket.on('connect', () => {
 
 socket.on('connect_error', (error) => {
   console.error('✗ Connection error:', error.message);
+  
+  // Detailed error diagnostics
+  if (NORMALIZED_URL.includes('localhost')) {
+    console.warn('ℹ️ Local development: Ensure backend is running at', NORMALIZED_URL);
+  } else {
+    console.warn('ℹ️ Production: Check that VITE_API_URL environment variable is correct');
+    console.warn('ℹ️ Backend URL:', NORMALIZED_URL);
+  }
 });
 
 socket.on('disconnect', (reason) => {
   console.log('✗ Disconnected:', reason);
   isSocketConnected = false;
+  
+  // Provide helpful context for different disconnection reasons
+  if (reason === 'io server disconnect') {
+    console.warn('ℹ️ Server closed connection. Check server logs.');
+  } else if (reason === 'transport close') {
+    console.warn('ℹ️ Network connection lost. Checking for reconnection...');
+  }
 });
 
 socket.on('auth:error', (data) => {
   console.error('✗ Authentication error:', data.message);
+  console.warn('ℹ️ Your session may have expired. Please log in again.');
   localStorage.removeItem('authToken');
   localStorage.removeItem('userId');
 });
@@ -283,6 +309,10 @@ export const onFriendRequestAccepted = (callback) => {
   socket.on('friendRequest:accepted', callback);
 };
 
+export const onFriendRequestRejected = (callback) => {
+  socket.on('friendRequest:rejected', callback);
+};
+
 export const onFriendRemoved = (callback) => {
   socket.on('friend:removed', callback);
 };
@@ -305,6 +335,7 @@ export const offFriendTaskUpdated = () => socket.off('friend-task:updated');
 export const offFriendTaskDeleted = () => socket.off('friend-task:deleted');
 export const offFriendRequestReceived = () => socket.off('friendRequest:received');
 export const offFriendRequestAccepted = () => socket.off('friendRequest:accepted');
+export const offFriendRequestRejected = () => socket.off('friendRequest:rejected');
 export const offFriendRemoved = () => socket.off('friend:removed');
 export const offUserOnline = () => socket.off('user:online');
 export const offUserOffline = () => socket.off('user:offline');
