@@ -17,9 +17,9 @@ export const TaskProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [friendTasksData, setFriendTasksData] = useState({});
   const [themes, setThemes] = useState({
-    myTasks: '#ec4899',      // Pink
-    friendTasks: '#2196f3',  // Blue
-    groupTasks: '#10b981'    // Green
+    myTasks: '#ec4899',
+    friendTasks: '#2196f3',
+    groupTasks: '#10b981'
   });
 
   async function loadUserData() {
@@ -40,7 +40,6 @@ export const TaskProvider = ({ children }) => {
         })
       ]);
 
-      // Separate personal and group tasks
       const personalTasks = (tasksData || []).filter(t => t.taskType !== 'group');
       const groupTasksList = (tasksData || []).filter(t => t.taskType === 'group');
 
@@ -51,11 +50,9 @@ export const TaskProvider = ({ children }) => {
     } catch (err) {
       console.warn('Warning: Could not load some user data:', err.message);
       setError(err.message);
-      // Don't throw - app should continue to work
     }
   }
 
-  // Check if user is logged in on mount
   useEffect(() => {
     const initializeApp = async () => {
       try {
@@ -70,7 +67,6 @@ export const TaskProvider = ({ children }) => {
             api.connectSocket();
             setUser(parsedUser);
             
-            // Load user themes
             if (parsedUser.themeColors) {
               try {
                 setThemes(JSON.parse(parsedUser.themeColors));
@@ -79,12 +75,10 @@ export const TaskProvider = ({ children }) => {
               }
             }
             
-            // Load user data asynchronously without blocking
             try {
               await loadUserData();
             } catch (err) {
               console.error('Error during loadUserData:', err);
-              // Don't crash the app if data loading fails
             }
           } catch (parseErr) {
             console.error('Error parsing stored user data:', parseErr);
@@ -94,7 +88,6 @@ export const TaskProvider = ({ children }) => {
           }
         }
       } finally {
-        // Always set loading to false after initialization attempt
         setLoading(false);
       }
     };
@@ -102,26 +95,18 @@ export const TaskProvider = ({ children }) => {
     initializeApp();
   }, []);
 
-  // Real-time listeners
   useEffect(() => {
     if (!user) return;
 
-    // Own task events
     api.onTaskCreated(({ userId, task }) => {
       if (userId === user.id) {
-        setTasks(prev => (
-          prev.some((existingTask) => existingTask.id === task.id)
-            ? prev
-            : [task, ...prev]
-        ));
+        setTasks(prev => prev.some(t => t.id === task.id) ? prev : [task, ...prev]);
       }
     });
 
     api.onTaskUpdated(({ userId, task }) => {
       if (userId === user.id) {
-        setTasks(prev =>
-          prev.map(t => t.id === task.id ? task : t)
-        );
+        setTasks(prev => prev.map(t => t.id === task.id ? task : t));
       }
     });
 
@@ -131,7 +116,6 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
-    // Friend task events (for real-time updates)
     api.onFriendTaskCreated(({ userId, task }) => {
       if (userId !== user.id) {
         setFriendTasksData(prev => ({
@@ -159,38 +143,21 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
-    // Friend request events - Real-time updates
+    // Friend request real-time updates
     api.onFriendRequestReceived(({ toId, request }) => {
       if (toId === user.id) {
-        // Optimistic update: add the new request immediately for instant feedback
         setFriendRequests(prev => [request, ...prev]);
       }
     });
 
-        // Refresh friends and friend requests
->>>>>>> Stashed changes
-        api.getFriends().then(setFriends);
-        api.getFriendRequests().then(setFriendRequests);
-      }
-    });
-=======
     api.onFriendRequestAccepted(({ userId, friendId }) => {
       if (userId === user.id || friendId === user.id) {
-        // Refresh friends and friend requests
-        api.getFriends().then(setFriends);
-        api.getFriendRequests().then(setFriendRequests);
-      }
-    });
-=======
-        // Refresh friends and friend requests
->>>>>>> Stashed changes
         api.getFriends().then(setFriends);
         api.getFriendRequests().then(setFriendRequests);
       }
     });
 
     api.onFriendRequestRejected(({ requestId }) => {
-      // Remove the rejected request from UI immediately
       setFriendRequests(prev => prev.filter(req => req.id !== requestId));
     });
 
@@ -200,7 +167,6 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
-    // User presence events
     api.onUserOnline(({ userId }) => {
       console.log(`User ${userId} is online`);
     });
@@ -296,17 +262,9 @@ export const TaskProvider = ({ children }) => {
       const createdTask = await api.createTask(text, taskType);
       
       if (taskType === 'group') {
-        setGroupTasks(prev => (
-          prev.some((task) => task.id === createdTask.id)
-            ? prev
-            : [createdTask, ...prev]
-        ));
+        setGroupTasks(prev => prev.some(t => t.id === createdTask.id) ? prev : [createdTask, ...prev]);
       } else {
-        setTasks(prev => (
-          prev.some((task) => task.id === createdTask.id)
-            ? prev
-            : [createdTask, ...prev]
-        ));
+        setTasks(prev => prev.some(t => t.id === createdTask.id) ? prev : [createdTask, ...prev]);
       }
       return createdTask;
     } catch (err) {
@@ -316,9 +274,7 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  const addGroupTask = async (text) => {
-    return addTask(text, 'group');
-  };
+  const addGroupTask = async (text) => addTask(text, 'group');
 
   const toggleTask = async (taskId) => {
     try {
@@ -331,20 +287,14 @@ export const TaskProvider = ({ children }) => {
         isGroupTask = true;
       }
 
-      if (!task) {
-        return false;
-      }
+      if (!task) return false;
 
       const updatedTask = await api.updateTask(taskId, { completed: !task.completed });
       
       if (isGroupTask) {
-        setGroupTasks(prev =>
-          prev.map(t => t.id === taskId ? updatedTask : t)
-        );
+        setGroupTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
       } else {
-        setTasks(prev =>
-          prev.map(t => t.id === taskId ? updatedTask : t)
-        );
+        setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
       }
       return true;
     } catch (err) {
@@ -359,8 +309,8 @@ export const TaskProvider = ({ children }) => {
       setError(null);
       await api.deleteTask(taskId);
       
-      setTasks(prev => prev.filter((task) => task.id !== taskId));
-      setGroupTasks(prev => prev.filter((task) => task.id !== taskId));
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setGroupTasks(prev => prev.filter(t => t.id !== taskId));
       return true;
     } catch (err) {
       setError(err.message);
@@ -389,17 +339,14 @@ export const TaskProvider = ({ children }) => {
 
   const acceptFriendRequest = async (requestId) => {
     try {
-      // Optimistic update - remove from requests immediately
       const previousRequests = friendRequests;
       setFriendRequests(prev => prev.filter(req => req.id !== requestId));
       
       await api.acceptFriendRequest(requestId);
       
-      // Fetch updated friends list
       const updatedFriends = await api.getFriends();
       setFriends(updatedFriends);
     } catch (err) {
-      // Revert optimistic update on error
       setFriendRequests(previousRequests);
       setError(err.message);
       console.error('Error accepting friend request:', err);
@@ -408,13 +355,11 @@ export const TaskProvider = ({ children }) => {
 
   const rejectFriendRequest = async (requestId) => {
     try {
-      // Optimistic update - remove from requests immediately
       const previousRequests = friendRequests;
       setFriendRequests(prev => prev.filter(req => req.id !== requestId));
       
       await api.rejectFriendRequest(requestId);
     } catch (err) {
-      // Revert optimistic update on error
       setFriendRequests(previousRequests);
       setError(err.message);
       console.error('Error rejecting friend request:', err);
@@ -453,7 +398,6 @@ export const TaskProvider = ({ children }) => {
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
       
-      // Update themes if themeColors is returned
       if (updatedUser.themeColors) {
         try {
           setThemes(JSON.parse(updatedUser.themeColors));
@@ -499,7 +443,6 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  // ========== NOTES FUNCTIONS ==========
   const addNote = async (content, color = '#fbbf24') => {
     try {
       setError(null);
@@ -554,12 +497,8 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  // Get tasks by date (archived)
-  const getTasksByDate = (date) => {
-    return archivedTasks[date] || [];
-  };
+  const getTasksByDate = (date) => archivedTasks[date] || [];
 
-  // Archive completed tasks by date
   const archiveCompletedTasks = async () => {
     try {
       setError(null);
@@ -571,7 +510,6 @@ export const TaskProvider = ({ children }) => {
           ...prev,
           [today]: completedTasks
         }));
-        // Save to localStorage for persistence
         localStorage.setItem('archivedTasks', JSON.stringify({
           ...JSON.parse(localStorage.getItem('archivedTasks') || '{}'),
           [today]: completedTasks
@@ -585,13 +523,11 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  // Load archived tasks from localStorage on mount
   useEffect(() => {
     const archivedTasksData = localStorage.getItem('archivedTasks');
     if (archivedTasksData) {
       setArchivedTasks(JSON.parse(archivedTasksData));
     }
-    // Load notes when user is set
     if (user) {
       loadNotes();
     }
@@ -630,12 +566,10 @@ export const TaskProvider = ({ children }) => {
         updateProfile,
         updateThemes,
         getFriendTasks: (friendId) => friendTasksData[friendId] || [],
-        // Notes functions
         addNote,
         updateNote,
         deleteNote,
         loadNotes,
-        // Archived tasks
         getTasksByDate,
         archiveCompletedTasks
       }}
