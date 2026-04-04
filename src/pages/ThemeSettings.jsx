@@ -72,7 +72,7 @@ const ThemeSettings = () => {
       } else {
         setMessage('❌ Failed to update themes');
       }
-    } catch (err) {
+    } catch (_err) {
       setMessage('❌ Error updating themes');
     } finally {
       setLoading(false);

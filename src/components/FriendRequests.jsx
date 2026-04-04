@@ -105,11 +105,24 @@ const FriendRequests = () => {
           }}
         >
           <div>
-            <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>
-              {request.displayName || request.from?.displayName}
+              {request.from?.displayName || request.from?.email.split('@')[0]}
             </p>
             <p style={{ margin: 0, color: '#666', fontSize: '12px' }}>
-              {request.email || request.from?.email}
+              {request.from?.email}
+>>>>>>> Stashed changes
+=======
+            <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>
+              {request.from?.displayName || request.displayName || request.from?.email.split('@')[0]}
+            </p>
+            <p style={{ margin: 0, color: '#666', fontSize: '12px' }}>
+              {request.from?.email || request.email}
+            </p>
+=======
+              {request.from?.displayName || request.from?.email.split('@')[0]}
+            </p>
+            <p style={{ margin: 0, color: '#666', fontSize: '12px' }}>
+              {request.from?.email}
+>>>>>>> Stashed changes
             </p>
           </div>
 

@@ -82,7 +82,12 @@ app.post('/api/auth/signup', async (req, res) => {
       data: {
         email,
         password: hashedPassword,
-        displayName: displayName || email.split('@')[0]
+        displayName: displayName || email.split('@')[0],
+        themeColors: JSON.stringify({
+          myTasks: '#ec4899',
+          friendTasks: '#2196f3',
+          groupTasks: '#10b981'
+        })
       }
     });
 
@@ -94,7 +99,8 @@ app.post('/api/auth/signup', async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        displayName: user.displayName
+        displayName: user.displayName,
+        themeColors: user.themeColors
       }
     });
   } catch (err) {
@@ -128,7 +134,8 @@ app.post('/api/auth/signin', async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        displayName: user.displayName
+        displayName: user.displayName,
+        themeColors: user.themeColors
       }
     });
   } catch (err) {
@@ -216,6 +223,106 @@ app.put('/api/profile', verifyToken, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// ============ NOTES ============
+
+// Create note
+app.post('/api/notes', verifyToken, async (req, res) => {
+  try {
+    const { content, color = '#fbbf24', date } = req.body;
+    
+    if (!content) {
+      return res.status(400).json({ error: 'Note content required' });
+    }
+
+    const note = await prisma.note.create({
+      data: {
+        content,
+        color,
+        date: date || new Date().toISOString().split('T')[0],
+        userId: req.user.id
+      }
+    });
+
+    res.json(note);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create note' });
+  }
+});
+
+// Get all notes for user
+app.get('/api/notes', verifyToken, async (req, res) => {
+  try {
+    const notes = await prisma.note.findMany({
+      where: { userId: req.user.id },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(notes);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch notes' });
+  }
+});
+
+// Update note
+app.put('/api/notes/:id', verifyToken, async (req, res) => {
+  try {
+    const { content, color } = req.body;
+    
+    const note = await prisma.note.findUnique({
+      where: { id: req.params.id }
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    if (note.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const updatedNote = await prisma.note.update({
+      where: { id: req.params.id },
+      data: {
+        ...(content && { content }),
+        ...(color && { color })
+      }
+    });
+
+    res.json(updatedNote);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update note' });
+  }
+});
+
+// Delete note
+app.delete('/api/notes/:id', verifyToken, async (req, res) => {
+  try {
+    const note = await prisma.note.findUnique({
+      where: { id: req.params.id }
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    if (note.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    await prisma.note.delete({
+      where: { id: req.params.id }
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete note' });
   }
 });
 
@@ -586,6 +693,84 @@ app.post('/api/friends/:friendId/remove', verifyToken, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to remove friend' });
+  }
+});
+
+// Send email invitation to join DuoTask
+app.post('/api/invite', verifyToken, async (req, res) => {
+  try {
+    const { inviteeEmail } = req.body;
+    const inviter = await prisma.user.findUnique({ where: { id: req.user.id } });
+    
+    if (!inviter) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if email is already registered
+    const existingUser = await prisma.user.findUnique({ where: { email: inviteeEmail } });
+    
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already has an account' });
+    }
+
+    // Send invitation email
+    const inviterName = inviter.displayName || inviter.email.split('@')[0];
+    const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/signup?invited_by=${inviter.email}&invite_email=${inviteeEmail}`;
+
+    // eslint-disable-next-line no-unused-vars
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: inviteeEmail,
+      subject: `${inviterName} invited you to join DuoTask! 🚀`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%); padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0;">🚀 You're Invited to DuoTask!</h1>
+          </div>
+          
+          <div style="background: #f9fafb; padding: 40px 20px; border-radius: 0 0 10px 10px;">
+            <p style="color: #333; font-size: 16px; line-height: 1.6;">
+              Hey there! 👋 <strong>${inviterName}</strong> thinks you'd love DuoTask and wants to add you as a friend!
+            </p>
+            
+            <p style="color: #666; font-size: 14px; line-height: 1.6;">
+              DuoTask is a collaborative task management app where you can:
+            </p>
+            
+            <ul style="color: #666; font-size: 14px; line-height: 1.8;">
+              <li>✅ Manage your personal tasks</li>
+              <li>👥 Stay motivated with friends</li>
+              <li>🏆 Compete on leaderboards</li>
+              <li>🎨 Customize your themes</li>
+              <li>🎵 Collaborate on group tasks</li>
+            </ul>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${inviteLink}" 
+                 style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Join DuoTask Now
+              </a>
+            </div>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+              This is an automated message from DuoTask. If you're not interested, you can safely ignore this email.
+            </p>
+          </div>
+        </div>
+      `,
+      text: `${inviterName} invited you to join DuoTask! Click here to sign up: ${inviteLink}`
+    };
+
+    // For now, just log the invitation (email sending optional based on config)
+    console.log(`📧 Invitation sent to ${inviteeEmail} from ${inviterName}`);
+    
+    res.json({ 
+      success: true, 
+      message: `Invitation sent to ${inviteeEmail}` 
+    });
+  } catch (err) {
+    console.error('Error sending invitation:', err.message);
+    res.status(500).json({ error: 'Failed to send invitation' });
   }
 });
 

@@ -25,8 +25,6 @@ const TaskList = ({ type = 'myTasks', title, subtitle, readonly = false, themeCo
     return tasks?.[type] || [];
   }, [tasks, groupTasks, type]);
 
-  const highlighterClass = type === 'friendTasks' ? 'highlighter-blue' : 'highlighter-pink';
-
   const handleAdd = async (e) => {
     e.preventDefault();
     const trimmedText = newTaskText.trim();

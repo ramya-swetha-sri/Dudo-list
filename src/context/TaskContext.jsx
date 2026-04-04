@@ -8,6 +8,8 @@ export const useTasks = () => useContext(TaskContext);
 export const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
   const [groupTasks, setGroupTasks] = useState([]);
+  const [notes, setNotes] = useState([]);
+  const [archivedTasks, setArchivedTasks] = useState({});
   const [user, setUser] = useState(null);
   const [friends, setFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -22,51 +24,82 @@ export const TaskProvider = ({ children }) => {
 
   async function loadUserData() {
     try {
+      setError(null);
       const [tasksData, friendsData, requestsData] = await Promise.all([
-        api.getTasks(),
-        api.getFriends(),
-        api.getFriendRequests()
+        api.getTasks().catch(err => {
+          console.log('getTasks failed:', err.message);
+          return [];
+        }),
+        api.getFriends().catch(err => {
+          console.log('getFriends failed:', err.message);
+          return [];
+        }),
+        api.getFriendRequests().catch(err => {
+          console.log('getFriendRequests failed:', err.message);
+          return [];
+        })
       ]);
 
       // Separate personal and group tasks
-      const personalTasks = tasksData.filter(t => t.taskType !== 'group');
-      const groupTasksList = tasksData.filter(t => t.taskType === 'group');
+      const personalTasks = (tasksData || []).filter(t => t.taskType !== 'group');
+      const groupTasksList = (tasksData || []).filter(t => t.taskType === 'group');
 
       setTasks(personalTasks);
       setGroupTasks(groupTasksList);
-      setFriends(friendsData);
-      setFriendRequests(requestsData);
+      setFriends(friendsData || []);
+      setFriendRequests(requestsData || []);
     } catch (err) {
+      console.warn('Warning: Could not load some user data:', err.message);
       setError(err.message);
-      console.error('Error loading user data:', err);
+      // Don't throw - app should continue to work
     }
   }
 
   // Check if user is logged in on mount
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userId = localStorage.getItem('userId');
-    const userData = localStorage.getItem('user');
+    const initializeApp = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const userId = localStorage.getItem('userId');
+        const userData = localStorage.getItem('user');
 
-    if (token && userId && userData) {
-      api.setAuthToken(token, userId);
-      api.connectSocket();
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      
-      // Load user themes
-      if (parsedUser.themeColors) {
-        try {
-          setThemes(JSON.parse(parsedUser.themeColors));
-        } catch (e) {
-          console.error('Error parsing themes:', e);
+        if (token && userId && userData) {
+          try {
+            const parsedUser = JSON.parse(userData);
+            api.setAuthToken(token, userId);
+            api.connectSocket();
+            setUser(parsedUser);
+            
+            // Load user themes
+            if (parsedUser.themeColors) {
+              try {
+                setThemes(JSON.parse(parsedUser.themeColors));
+              } catch (e) {
+                console.error('Error parsing themes:', e);
+              }
+            }
+            
+            // Load user data asynchronously without blocking
+            try {
+              await loadUserData();
+            } catch (err) {
+              console.error('Error during loadUserData:', err);
+              // Don't crash the app if data loading fails
+            }
+          } catch (parseErr) {
+            console.error('Error parsing stored user data:', parseErr);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('user');
+          }
         }
+      } finally {
+        // Always set loading to false after initialization attempt
+        setLoading(false);
       }
-      
-      loadUserData();
-    }
+    };
 
-    setLoading(false);
+    initializeApp();
   }, []);
 
   // Real-time listeners
@@ -134,10 +167,25 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
+        // Refresh friends and friend requests
+>>>>>>> Stashed changes
+        api.getFriends().then(setFriends);
+        api.getFriendRequests().then(setFriendRequests);
+      }
+    });
+=======
     api.onFriendRequestAccepted(({ userId, friendId }) => {
       if (userId === user.id || friendId === user.id) {
-        // Fetch updated friends list for both users
+        // Refresh friends and friend requests
         api.getFriends().then(setFriends);
+        api.getFriendRequests().then(setFriendRequests);
+      }
+    });
+=======
+        // Refresh friends and friend requests
+>>>>>>> Stashed changes
+        api.getFriends().then(setFriends);
+        api.getFriendRequests().then(setFriendRequests);
       }
     });
 
@@ -439,11 +487,123 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  const sendInvitation = async (inviteeEmail) => {
+    try {
+      setError(null);
+      await api.sendInvitation(inviteeEmail);
+      return true;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error sending invitation:', err);
+      return false;
+    }
+  };
+
+  // ========== NOTES FUNCTIONS ==========
+  const addNote = async (content, color = '#fbbf24') => {
+    try {
+      setError(null);
+      const note = await api.createNote({ 
+        content, 
+        color,
+        date: new Date().toISOString().split('T')[0]
+      });
+      setNotes(prev => [note, ...prev]);
+      return note;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error adding note:', err);
+      return null;
+    }
+  };
+
+  const updateNote = async (noteId, updates) => {
+    try {
+      setError(null);
+      const updatedNote = await api.updateNote(noteId, updates);
+      setNotes(prev => prev.map(n => n.id === noteId ? updatedNote : n));
+      return true;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating note:', err);
+      return false;
+    }
+  };
+
+  const deleteNote = async (noteId) => {
+    try {
+      setError(null);
+      await api.deleteNote(noteId);
+      setNotes(prev => prev.filter(n => n.id !== noteId));
+      return true;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error deleting note:', err);
+      return false;
+    }
+  };
+
+  const loadNotes = async () => {
+    try {
+      setError(null);
+      const allNotes = await api.getNotes();
+      setNotes(allNotes);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error loading notes:', err);
+    }
+  };
+
+  // Get tasks by date (archived)
+  const getTasksByDate = (date) => {
+    return archivedTasks[date] || [];
+  };
+
+  // Archive completed tasks by date
+  const archiveCompletedTasks = async () => {
+    try {
+      setError(null);
+      const today = new Date().toISOString().split('T')[0];
+      const completedTasks = [...tasks, ...groupTasks].filter(t => t.completed);
+      
+      if (completedTasks.length > 0) {
+        setArchivedTasks(prev => ({
+          ...prev,
+          [today]: completedTasks
+        }));
+        // Save to localStorage for persistence
+        localStorage.setItem('archivedTasks', JSON.stringify({
+          ...JSON.parse(localStorage.getItem('archivedTasks') || '{}'),
+          [today]: completedTasks
+        }));
+      }
+      return true;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error archiving tasks:', err);
+      return false;
+    }
+  };
+
+  // Load archived tasks from localStorage on mount
+  useEffect(() => {
+    const archivedTasksData = localStorage.getItem('archivedTasks');
+    if (archivedTasksData) {
+      setArchivedTasks(JSON.parse(archivedTasksData));
+    }
+    // Load notes when user is set
+    if (user) {
+      loadNotes();
+    }
+  }, [user]);
+
   return (
     <TaskContext.Provider
       value={{
         tasks,
         groupTasks,
+        notes,
+        archivedTasks,
         friends,
         friendRequests,
         user,
@@ -462,13 +622,22 @@ export const TaskProvider = ({ children }) => {
         acceptFriendRequest,
         rejectFriendRequest,
         removeFriend,
+        sendInvitation,
         subscribeFriendTasks,
         subscribeToFriendTasks: subscribeFriendTasks,
         forgotPassword: forgotPasswordToken,
         resetPassword: performResetPassword,
         updateProfile,
         updateThemes,
-        getFriendTasks: (friendId) => friendTasksData[friendId] || []
+        getFriendTasks: (friendId) => friendTasksData[friendId] || [],
+        // Notes functions
+        addNote,
+        updateNote,
+        deleteNote,
+        loadNotes,
+        // Archived tasks
+        getTasksByDate,
+        archiveCompletedTasks
       }}
     >
       {children}

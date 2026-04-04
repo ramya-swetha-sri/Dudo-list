@@ -107,25 +107,45 @@ const getAuthHeader = () => ({
 // ============ AUTH ============
 
 export const signup = async (email, password, displayName) => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, displayName })
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, displayName })
+    });
 
-  if (!response.ok) throw new Error('Signup failed');
-  return response.json();
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Signup failed');
+    }
+    
+    return data;
+  } catch (err) {
+    console.error('Signup error:', err);
+    throw err;
+  }
 };
 
 export const signin = async (email, password) => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/signin`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/signin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
 
-  if (!response.ok) throw new Error('Signin failed');
-  return response.json();
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Signin failed');
+    }
+    
+    return data;
+  } catch (err) {
+    console.error('Signin error:', err);
+    throw err;
+  }
 };
 
 export const forgotPassword = async (email) => {
@@ -280,6 +300,60 @@ export const removeFriend = async (friendId) => {
   });
 
   if (!response.ok) throw new Error('Failed to remove friend');
+  return response.json();
+};
+
+export const sendInvitation = async (inviteeEmail) => {
+  const response = await fetch(`${API_BASE_URL}/api/invite`, {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify({ inviteeEmail })
+  });
+
+  if (!response.ok) throw new Error('Failed to send invitation');
+  return response.json();
+};
+
+// ============ NOTES ============
+
+export const createNote = async (noteData) => {
+  const response = await fetch(`${API_BASE_URL}/api/notes`, {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify(noteData)
+  });
+
+  if (!response.ok) throw new Error('Failed to create note');
+  return response.json();
+};
+
+export const getNotes = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/notes`, {
+    headers: getAuthHeader()
+  });
+
+  if (!response.ok) throw new Error('Failed to fetch notes');
+  return response.json();
+};
+
+export const updateNote = async (noteId, updates) => {
+  const response = await fetch(`${API_BASE_URL}/api/notes/${noteId}`, {
+    method: 'PUT',
+    headers: getAuthHeader(),
+    body: JSON.stringify(updates)
+  });
+
+  if (!response.ok) throw new Error('Failed to update note');
+  return response.json();
+};
+
+export const deleteNote = async (noteId) => {
+  const response = await fetch(`${API_BASE_URL}/api/notes/${noteId}`, {
+    method: 'DELETE',
+    headers: getAuthHeader()
+  });
+
+  if (!response.ok) throw new Error('Failed to delete note');
   return response.json();
 };
 

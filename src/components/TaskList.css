@@ -89,6 +89,8 @@
   box-shadow: none !important;
   border-radius: 0 !important;
   transition: all 0.2s ease;
+  position: relative;
+  overflow: visible;
 }
 
 .task-item:hover:not(.readonly) {
