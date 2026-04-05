@@ -1,121 +1,131 @@
-🧠 Dudo — Smart Task & Productivity Manager
+# Dudo — Smart Task & Productivity Manager
 
-Dudo is a thoughtfully designed productivity application that helps users take control of their daily tasks with clarity and precision. In a world filled with overwhelming tools and cluttered interfaces, Dudo stands out by focusing on what truly matters — simplicity, speed, and meaningful productivity.
+Dudo is a productivity application that helps users manage tasks, connect with friends, and stay focused using real-time updates and a Pomodoro timer.
 
-It is built to provide a seamless experience where users can effortlessly plan, organize, and execute their tasks without friction. Whether you're a student managing assignments, a developer tracking workflows, or someone trying to build better daily habits, Dudo acts as a reliable digital companion.
+## Tech Stack
 
-✨ Core Philosophy
+- **Frontend**: React 19, Vite, Socket.io-client
+- **Backend**: Node.js, Express, Socket.io
+- **Database**: PostgreSQL via [Prisma ORM](https://www.prisma.io/)
+- **Auth**: JWT (JSON Web Tokens)
 
-Dudo is based on a simple idea:
+---
 
-Productivity tools should reduce mental load, not increase it.
+## Getting Started
 
-Instead of bombarding users with excessive features, Dudo emphasizes:
+### Prerequisites
 
-Clarity over complexity
-Speed over heaviness
-Focus over distraction
+- Node.js 18+ and npm
+- A PostgreSQL database (e.g., [Neon](https://neon.tech) — free tier available)
 
-Every interaction is designed to be intuitive, fast, and purposeful.
+### 1. Clone the repository
 
-🚀 Features
-✅ Smart Task Management
+```bash
+git clone https://github.com/ramya-swetha-sri/Dudo-list.git
+cd Dudo-list
+```
 
-Create, edit, and delete tasks with minimal effort. The system is designed to feel natural, allowing users to focus on tasks rather than managing the tool itself.
+### 2. Configure the backend environment
 
-📋 Structured Workflow
+Copy the example env file and fill in your values:
 
-Tasks are organized in a clean and logical manner, helping users visualize their day and maintain control over their responsibilities.
+```bash
+cp server/.env.example server/.env
+```
 
-🎯 Focus-Centric Design
+Edit `server/.env` with your database and JWT settings:
 
-A distraction-free interface ensures that users stay engaged with their work. No unnecessary elements — just what you need to get things done.
+```env
+# PostgreSQL connection string (Neon, Supabase, Railway, etc.)
+DATABASE_URL=postgresql://user:password@host:port/database
 
-🔄 Real-Time Interaction
+# JWT secret — use a long random string in production
+JWT_SECRET=your-super-secret-key-change-this
 
-All updates are reflected instantly, providing a smooth and responsive experience that keeps users in flow.
+# Port for the backend server
+PORT=3000
 
-📱 Fully Responsive Experience
+# Frontend URL for CORS (must match where your frontend runs)
+FRONTEND_URL=http://localhost:5173
 
-Dudo adapts seamlessly across devices, ensuring consistency whether you're on desktop, tablet, or mobile.
+# Optional: email notifications for friend requests
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+```
 
-💡 Why Dudo?
+### 3. Install dependencies and initialise the database
 
-Most productivity apps try to do everything — and end up doing too much.
-Dudo takes a different approach:
+Run this once after cloning (or when the schema changes):
 
-⚡ Lightweight and fast
-🧩 Easy to understand and use
-🎯 Built for real-world productivity
-🧘 Reduces cognitive overload
+```bash
+npm run setup
+```
 
-It’s not just about managing tasks — it’s about creating a system that helps you think clearly and act efficiently.
+This command:
+1. Installs frontend `node_modules`
+2. Installs server `node_modules`
+3. Generates the Prisma client
+4. Pushes the database schema to your PostgreSQL instance
 
-🛠️ Project Vision & Goals
+### 4. Start development servers
 
-Dudo is more than just a simple project — it’s the foundation of a scalable productivity ecosystem. The goals behind building Dudo include:
+```bash
+npm run dev:all
+```
 
-Developing a minimal yet powerful task management system
-Practicing and implementing modern UI/UX design principles
-Creating a modular and scalable frontend architecture
-Establishing a base for future intelligent systems
+This starts both servers concurrently:
 
-This project also serves as a stepping stone toward integrating advanced technologies like AI-driven productivity tools.
+| Service  | URL                   |
+|----------|-----------------------|
+| Frontend | http://localhost:5173 |
+| Backend  | http://localhost:3000 |
 
-🌱 Future Roadmap
+Or run them separately in two terminals:
 
-Dudo is designed to evolve. Upcoming enhancements aim to transform it into a smarter and more personalized productivity platform:
+```bash
+# Terminal 1 — frontend
+npm run dev
 
-⏰ Smart Reminders & Notifications
-Context-aware alerts to keep users on track
-🤖 AI-Based Task Suggestions
-Intelligent recommendations based on user behavior and patterns
-📊 Productivity Analytics Dashboard
-Insights into performance, habits, and efficiency
-🔐 Authentication & Cloud Sync
-Secure access and cross-device synchronization
-🤝 Collaboration Features (Planned)
-Share tasks, assign work, and collaborate in real-time
-🔮 Future Scope
+# Terminal 2 — backend
+npm run server:dev
+```
 
-Dudo has the potential to grow beyond a simple productivity tool into a full-fledged intelligent productivity ecosystem. Future scope includes:
+### 5. Build for production
 
-🧠 AI Productivity Engine
+```bash
+npm run build
+```
 
-A personalized AI assistant that understands user behavior, predicts workloads, and optimizes schedules automatically.
+---
 
-🔗 Cross-Platform Ecosystem
+## Available Scripts
 
-Integration with multiple platforms (web, mobile, wearable devices) to ensure seamless productivity across environments.
+| Command              | Description                                          |
+|----------------------|------------------------------------------------------|
+| `npm run setup`      | Install all deps + generate Prisma client + push DB  |
+| `npm run dev:all`    | Run frontend and backend together (concurrently)     |
+| `npm run dev`        | Frontend only (Vite dev server)                      |
+| `npm run server:dev` | Backend only (auto-restarts on file changes)         |
+| `npm run build`      | Build frontend for production                        |
+| `npm run deploy`     | Build frontend and deploy to Vercel                  |
 
-🌍 Community & Collaboration Layer
+---
 
-Enable team-based productivity with shared workspaces, group tasks, and community-driven workflows.
+## Features
 
-📡 Integration with External Tools
+- **Task Management** — Create, complete, and delete personal and group tasks
+- **Friends** — Send/accept friend requests and view friends' tasks in real-time
+- **Pomodoro Timer** — Built-in focus timer
+- **Leaderboard** — Track productivity across friends
+- **Themes** — Customisable colour themes per section
+- **Real-time sync** — Socket.io keeps all clients in sync instantly
 
-Connect with tools like calendars, emails, and developer platforms to centralize all productivity in one place.
+---
 
-🧩 Modular Plugin System
+## Deployment
 
-Allow users to customize Dudo with plugins/extensions based on their needs (e.g., study mode, coding mode, fitness tracking).
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for full Vercel + backend hosting instructions.
 
-🏢 Enterprise Adaptation
-
-Scale Dudo into a team/organization-level solution with dashboards, analytics, and performance tracking systems.
-
-🎯 Target Users
-
-Dudo is built for:
-
-🎓 Students managing academic workload
-💻 Developers tracking projects and tasks
-🚀 Startup builders organizing workflows
-📅 Anyone aiming to improve daily productivity
-📌 Final Thoughts
-
-Dudo is not just another to-do list application — it represents a shift toward intentional productivity. It removes noise, simplifies decision-making, and helps users focus on execution.
-
-By combining minimal design with practical functionality, Dudo creates an experience that feels effortless yet powerful.
-
-Simple. Fast. Focused. Built for clarity.

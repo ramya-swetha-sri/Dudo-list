@@ -30,7 +30,12 @@ const prisma = new PrismaClient();
 const userSocketMap = new Map();
 
 // Middleware
-app.use(cors());
+const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({
+  origin: allowedOrigin,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
