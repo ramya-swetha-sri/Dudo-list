@@ -18,9 +18,13 @@ function AppContent() {
   useEffect(() => {
     // Apply themes to CSS variables
     if (themes) {
-      document.documentElement.style.setProperty('--theme-my-tasks', themes.myTasks);
-      document.documentElement.style.setProperty('--theme-friend-tasks', themes.friendTasks);
-      document.documentElement.style.setProperty('--theme-group-tasks', themes.groupTasks);
+      document.documentElement.style.setProperty('--theme-my-tasks', themes.myTasks || '#ec4899');
+      document.documentElement.style.setProperty('--theme-friend-tasks', themes.friendTasks || '#2196f3');
+      document.documentElement.style.setProperty('--theme-group-tasks', themes.groupTasks || '#10b981');
+      document.documentElement.style.setProperty('--accent-secondary', themes.inkColor || '#2b5b84');
+      document.documentElement.style.setProperty('--accent-primary', themes.marginColor || '#d94646');
+      document.documentElement.style.setProperty('--bg-primary', themes.paperColor || '#ffffff');
+      document.documentElement.style.setProperty('--text-primary', themes.textColor || '#1a1a1a');
     }
   }, [themes]);
 

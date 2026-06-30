@@ -86,7 +86,11 @@ app.post('/api/auth/signup', async (req, res) => {
         themeColors: JSON.stringify({
           myTasks: '#ec4899',
           friendTasks: '#2196f3',
-          groupTasks: '#10b981'
+          groupTasks: '#10b981',
+          inkColor: '#2b5b84',
+          marginColor: '#d94646',
+          paperColor: '#ffffff',
+          textColor: '#1a1a1a'
         })
       }
     });

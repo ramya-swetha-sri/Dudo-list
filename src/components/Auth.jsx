@@ -42,14 +42,14 @@ const Auth = () => {
 
     try {
       if (view === 'auth') {
-        const success = isSignUp
+        const result = isSignUp
           ? await signup(email.trim(), password, displayName.trim())
           : await signin(email.trim(), password);
 
-        if (success) {
+        if (result.success) {
           navigate('/my-tasks');
         } else {
-          setError('Authentication failed. Please check your details and try again.');
+          setError(result.error || 'Authentication failed. Please check your details and try again.');
         }
       } else if (view === 'forgot') {
         const token = await forgotPassword(email.trim());

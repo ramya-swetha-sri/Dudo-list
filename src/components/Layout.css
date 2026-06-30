@@ -37,7 +37,7 @@
   height: 100vh;
   flex-shrink: 0;
   border-right: 2px dotted var(--border-color);
-  background: rgba(255,255,255,0.9);
+  background: var(--bg-primary, rgba(255,255,255,0.9));
   transition: all 0.3s ease-in-out;
   overflow: hidden;
 }

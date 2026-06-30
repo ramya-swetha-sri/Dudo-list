@@ -9,37 +9,61 @@ const PRESET_THEMES = [
     name: 'Default',
     myTasks: '#ec4899',
     friendTasks: '#2196f3',
-    groupTasks: '#10b981'
+    groupTasks: '#10b981',
+    inkColor: '#2b5b84',
+    marginColor: '#d94646',
+    paperColor: '#ffffff',
+    textColor: '#1a1a1a'
   },
   {
     name: 'Ocean',
     myTasks: '#0ea5e9',
     friendTasks: '#06b6d4',
-    groupTasks: '#0d9488'
+    groupTasks: '#0d9488',
+    inkColor: '#0369a1',
+    marginColor: '#0ea5e9',
+    paperColor: '#f0f9ff',
+    textColor: '#0f172a'
   },
   {
     name: 'Sunset',
     myTasks: '#f97316',
     friendTasks: '#ec4899',
-    groupTasks: '#f59e0b'
+    groupTasks: '#f59e0b',
+    inkColor: '#c2410c',
+    marginColor: '#ea580c',
+    paperColor: '#fff7ed',
+    textColor: '#431407'
   },
   {
     name: 'Forest',
     myTasks: '#10b981',
     friendTasks: '#059669',
-    groupTasks: '#047857'
+    groupTasks: '#047857',
+    inkColor: '#15803d',
+    marginColor: '#16a34a',
+    paperColor: '#f0fdf4',
+    textColor: '#14532d'
   },
   {
     name: 'Purple Dream',
     myTasks: '#a855f7',
     friendTasks: '#d946ef',
-    groupTasks: '#7c3aed'
+    groupTasks: '#7c3aed',
+    inkColor: '#6d28d9',
+    marginColor: '#8b5cf6',
+    paperColor: '#faf5ff',
+    textColor: '#3b0764'
   },
   {
     name: 'Dark Mode',
-    myTasks: '#6b7280',
-    friendTasks: '#4b5563',
-    groupTasks: '#1f2937'
+    myTasks: '#e5e7eb',
+    friendTasks: '#9ca3af',
+    groupTasks: '#374151',
+    inkColor: '#f3f4f6',
+    marginColor: '#4b5563',
+    paperColor: '#111827',
+    textColor: '#f9fafb'
   }
 ];
 
@@ -58,7 +82,11 @@ const ThemeSettings = () => {
     setCustomThemes({
       myTasks: preset.myTasks,
       friendTasks: preset.friendTasks,
-      groupTasks: preset.groupTasks
+      groupTasks: preset.groupTasks,
+      inkColor: preset.inkColor || '#2b5b84',
+      marginColor: preset.marginColor || '#d94646',
+      paperColor: preset.paperColor || '#ffffff',
+      textColor: preset.textColor || '#1a1a1a'
     });
   };
 
@@ -144,6 +172,72 @@ const ThemeSettings = () => {
                 className="color-picker"
               />
               <code className="color-code">{customThemes.groupTasks}</code>
+            </div>
+          </div>
+        </div>
+
+        {/* General App Colors */}
+        <div className="theme-preview-section">
+          <h3>General App Colors</h3>
+          <div className="theme-preview">
+            <div className="preview-item">
+              <label>Ink Color</label>
+              <div
+                className="color-preview"
+                style={{ backgroundColor: customThemes.inkColor || '#2b5b84' }}
+              ></div>
+              <input
+                type="color"
+                value={customThemes.inkColor || '#2b5b84'}
+                onChange={(e) => handleColorChange('inkColor', e.target.value)}
+                className="color-picker"
+              />
+              <code className="color-code">{customThemes.inkColor || '#2b5b84'}</code>
+            </div>
+
+            <div className="preview-item">
+              <label>Margin Line</label>
+              <div
+                className="color-preview"
+                style={{ backgroundColor: customThemes.marginColor || '#d94646' }}
+              ></div>
+              <input
+                type="color"
+                value={customThemes.marginColor || '#d94646'}
+                onChange={(e) => handleColorChange('marginColor', e.target.value)}
+                className="color-picker"
+              />
+              <code className="color-code">{customThemes.marginColor || '#d94646'}</code>
+            </div>
+
+            <div className="preview-item">
+              <label>Paper Background</label>
+              <div
+                className="color-preview"
+                style={{ backgroundColor: customThemes.paperColor || '#ffffff' }}
+              ></div>
+              <input
+                type="color"
+                value={customThemes.paperColor || '#ffffff'}
+                onChange={(e) => handleColorChange('paperColor', e.target.value)}
+                className="color-picker"
+              />
+              <code className="color-code">{customThemes.paperColor || '#ffffff'}</code>
+            </div>
+
+            <div className="preview-item">
+              <label>Text Color</label>
+              <div
+                className="color-preview"
+                style={{ backgroundColor: customThemes.textColor || '#1a1a1a' }}
+              ></div>
+              <input
+                type="color"
+                value={customThemes.textColor || '#1a1a1a'}
+                onChange={(e) => handleColorChange('textColor', e.target.value)}
+                className="color-picker"
+              />
+              <code className="color-code">{customThemes.textColor || '#1a1a1a'}</code>
             </div>
           </div>
         </div>

@@ -19,7 +19,11 @@ export const TaskProvider = ({ children }) => {
   const [themes, setThemes] = useState({
     myTasks: '#ec4899',
     friendTasks: '#2196f3',
-    groupTasks: '#10b981'
+    groupTasks: '#10b981',
+    inkColor: '#2b5b84',
+    marginColor: '#d94646',
+    paperColor: '#ffffff',
+    textColor: '#1a1a1a'
   });
 
   async function loadUserData() {
@@ -41,10 +45,44 @@ export const TaskProvider = ({ children }) => {
       ]);
 
       const personalTasks = (tasksData || []).filter(t => t.taskType !== 'group');
-      const groupTasksList = (tasksData || []).filter(t => t.taskType === 'group');
+      const myGroupTasks = (tasksData || []).filter(t => t.taskType === 'group');
+
+      // Fetch tasks for each friend to compile group tasks and friendTasksData
+      const friendsTasksPromises = (friendsData || []).map(friend =>
+        api.getFriendTasks(friend.id).catch(err => {
+          console.log(`Failed to fetch tasks for friend ${friend.id}:`, err.message);
+          return [];
+        })
+      );
+      const friendsTasksLists = await Promise.all(friendsTasksPromises);
+
+      const friendGroupTasks = [];
+      const updatedFriendTasksData = {};
+
+      (friendsData || []).forEach((friend, idx) => {
+        const friendTasks = friendsTasksLists[idx] || [];
+        updatedFriendTasksData[friend.id] = friendTasks;
+        
+        // Extract group tasks from this friend
+        const groupTasks = friendTasks.filter(t => t.taskType === 'group');
+        friendGroupTasks.push(...groupTasks);
+      });
 
       setTasks(personalTasks);
-      setGroupTasks(groupTasksList);
+      
+      // Combine user's group tasks and friends' group tasks
+      const allGroupTasks = [...myGroupTasks, ...friendGroupTasks];
+      const uniqueGroupTasks = [];
+      const seenIds = new Set();
+      allGroupTasks.forEach(t => {
+        if (!seenIds.has(t.id)) {
+          seenIds.add(t.id);
+          uniqueGroupTasks.push(t);
+        }
+      });
+
+      setGroupTasks(uniqueGroupTasks);
+      setFriendTasksData(updatedFriendTasksData);
       setFriends(friendsData || []);
       setFriendRequests(requestsData || []);
     } catch (err) {
@@ -99,48 +137,78 @@ export const TaskProvider = ({ children }) => {
     if (!user) return;
 
     api.onTaskCreated(({ userId, task }) => {
-      if (userId === user.id) {
-        setTasks(prev => prev.some(t => t.id === task.id) ? prev : [task, ...prev]);
+      if (task.userId === user.id) {
+        if (task.taskType === 'group') {
+          setGroupTasks(prev => prev.some(t => t.id === task.id) ? prev : [task, ...prev]);
+        } else {
+          setTasks(prev => prev.some(t => t.id === task.id) ? prev : [task, ...prev]);
+        }
       }
     });
 
     api.onTaskUpdated(({ userId, task }) => {
-      if (userId === user.id) {
-        setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+      if (task.userId === user.id) {
+        if (task.taskType === 'group') {
+          setGroupTasks(prev => prev.map(t => t.id === task.id ? task : t));
+        } else {
+          setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+        }
+      } else {
+        if (task.taskType === 'group') {
+          setGroupTasks(prev => prev.map(t => t.id === task.id ? task : t));
+        }
+        setFriendTasksData(prev => ({
+          ...prev,
+          [task.userId]: (prev[task.userId] || []).map(t => t.id === task.id ? task : t)
+        }));
       }
     });
 
     api.onTaskDeleted(({ userId, taskId }) => {
-      if (userId === user.id) {
-        setTasks(prev => prev.filter(t => t.id !== taskId));
-      }
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setGroupTasks(prev => prev.filter(t => t.id !== taskId));
+      setFriendTasksData(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(fId => {
+          updated[fId] = updated[fId].filter(t => t.id !== taskId);
+        });
+        return updated;
+      });
     });
 
     api.onFriendTaskCreated(({ userId, task }) => {
-      if (userId !== user.id) {
+      if (task.userId !== user.id) {
+        if (task.taskType === 'group') {
+          setGroupTasks(prev => prev.some(t => t.id === task.id) ? prev : [task, ...prev]);
+        }
         setFriendTasksData(prev => ({
           ...prev,
-          [userId]: [task, ...(prev[userId] || [])]
+          [task.userId]: [task, ...(prev[task.userId] || [])]
         }));
       }
     });
 
     api.onFriendTaskUpdated(({ userId, task }) => {
-      if (userId !== user.id) {
+      if (task.userId !== user.id) {
+        if (task.taskType === 'group') {
+          setGroupTasks(prev => prev.map(t => t.id === task.id ? task : t));
+        }
         setFriendTasksData(prev => ({
           ...prev,
-          [userId]: (prev[userId] || []).map(t => t.id === task.id ? task : t)
+          [task.userId]: (prev[task.userId] || []).map(t => t.id === task.id ? task : t)
         }));
       }
     });
 
     api.onFriendTaskDeleted(({ userId, taskId }) => {
-      if (userId !== user.id) {
-        setFriendTasksData(prev => ({
-          ...prev,
-          [userId]: (prev[userId] || []).filter(t => t.id !== taskId)
-        }));
-      }
+      setGroupTasks(prev => prev.filter(t => t.id !== taskId));
+      setFriendTasksData(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(fId => {
+          updated[fId] = updated[fId].filter(t => t.id !== taskId);
+        });
+        return updated;
+      });
     });
 
     // Friend request real-time updates
@@ -152,8 +220,7 @@ export const TaskProvider = ({ children }) => {
 
     api.onFriendRequestAccepted(({ userId, friendId }) => {
       if (userId === user.id || friendId === user.id) {
-        api.getFriends().then(setFriends);
-        api.getFriendRequests().then(setFriendRequests);
+        loadUserData();
       }
     });
 
@@ -163,7 +230,7 @@ export const TaskProvider = ({ children }) => {
 
     api.onFriendRemoved(({ userId, friendId }) => {
       if (userId === user.id || friendId === user.id) {
-        api.getFriends().then(setFriends);
+        loadUserData();
       }
     });
 
@@ -201,10 +268,10 @@ export const TaskProvider = ({ children }) => {
       localStorage.setItem('userId', userData.id);
       localStorage.setItem('user', JSON.stringify(userData));
       await loadUserData();
-      return true;
+      return { success: true };
     } catch (err) {
       setError(err.message);
-      return false;
+      return { success: false, error: err.message };
     }
   };
 
@@ -218,10 +285,10 @@ export const TaskProvider = ({ children }) => {
       localStorage.setItem('userId', userData.id);
       localStorage.setItem('user', JSON.stringify(userData));
       await loadUserData();
-      return true;
+      return { success: true };
     } catch (err) {
       setError(err.message);
-      return false;
+      return { success: false, error: err.message };
     }
   };
 
