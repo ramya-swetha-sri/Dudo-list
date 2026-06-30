@@ -2,14 +2,13 @@ import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { TaskProvider, useTasks } from './context/TaskContext';
 import { ErrorBoundary } from './ErrorBoundary';
-import LandingPage from './pages/LandingPageTest';
+import LandingPage from './pages/LandingPage';
 import MyTasks from './pages/MyTasks';
 import FriendTasks from './pages/FriendTasks';
 import GroupTasks from './pages/GroupTasks';
 import Pomodoro from './pages/Pomodoro';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
-import Notes from './pages/Notes';
 import PreviousTasks from './pages/PreviousTasks';
 import Layout from './components/Layout';
 
@@ -35,7 +34,6 @@ function AppContent() {
         <Route path="/pomodoro" element={<Pomodoro />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/notes" element={<Notes />} />
         <Route path="/previous-tasks" element={<PreviousTasks />} />
       </Route>
     </Routes>

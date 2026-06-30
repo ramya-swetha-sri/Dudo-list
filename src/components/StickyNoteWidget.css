@@ -1,0 +1,351 @@
+/* ── Sticky Note Widget ── */
+
+/* Floating trigger button */
+.sticky-widget-trigger {
+  position: fixed;
+  top: 1rem;
+  right: 1.5rem;
+  z-index: 1100;
+  width: 44px;
+  height: 44px;
+  background: #fff9c4;
+  border: 2px solid var(--accent-secondary, #2b5b84);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 3px 0 rgba(0,0,0,0.2);
+  transform: rotate(3deg);
+  transition: all 0.25s ease;
+  color: var(--accent-secondary, #2b5b84);
+}
+
+.sticky-widget-trigger:hover {
+  transform: rotate(0deg) scale(1.1);
+  box-shadow: 3px 4px 0 rgba(0,0,0,0.25);
+  background: #fff176;
+}
+
+.sticky-widget-trigger.active {
+  background: var(--accent-secondary, #2b5b84);
+  color: white;
+  transform: rotate(0deg);
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.15);
+}
+
+.note-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--accent-primary, #d94646);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid white;
+}
+
+/* Expanded panel */
+.sticky-widget-panel {
+  position: fixed;
+  top: 4.5rem;
+  right: 1.5rem;
+  z-index: 1099;
+  width: 340px;
+  max-height: calc(100vh - 6rem);
+  background: #fff9c4;
+  border: 2px dashed var(--accent-secondary, #2b5b84);
+  border-radius: 6px;
+  box-shadow: 4px 6px 16px rgba(0,0,0,0.15), 2px 3px 0 rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-family, 'Patrick Hand', cursive);
+  transform-origin: top right;
+}
+
+/* Panel header */
+.sw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px dashed #ccc;
+}
+
+.sw-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--accent-secondary, #2b5b84);
+}
+
+.sw-close {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.sw-close:hover {
+  color: var(--accent-primary, #d94646);
+}
+
+/* Date navigation */
+.sw-date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px dashed #ddd;
+}
+
+.sw-date-btn {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: var(--accent-secondary, #2b5b84);
+  transition: all 0.2s;
+}
+
+.sw-date-btn:hover {
+  background: white;
+  border-color: var(--accent-secondary, #2b5b84);
+}
+
+.sw-date-label {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary, #1a1a1a);
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Notes list */
+.sw-notes-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+}
+
+.sw-notes-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sw-notes-list::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 3px;
+}
+
+/* Note card inside widget */
+.sw-note-card {
+  padding: 12px 14px;
+  border-radius: 4px;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.1);
+  transform: rotate(-0.5deg);
+  transition: transform 0.2s;
+  position: relative;
+}
+
+.sw-note-card:nth-child(even) {
+  transform: rotate(0.5deg);
+}
+
+.sw-note-card:hover {
+  transform: rotate(0deg) scale(1.02);
+}
+
+.sw-note-text {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #333;
+  margin: 0 0 8px 0;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.sw-note-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  padding-top: 6px;
+}
+
+.sw-note-time {
+  font-size: 0.72rem;
+  opacity: 0.6;
+  font-weight: 600;
+}
+
+.sw-note-delete {
+  background: none;
+  border: none;
+  color: rgba(0,0,0,0.35);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.sw-note-delete:hover {
+  color: #ef4444;
+  transform: scale(1.2);
+}
+
+.sw-empty {
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  padding: 20px 0;
+  font-style: italic;
+}
+
+/* Add note form */
+.sw-add-form {
+  padding: 12px;
+  border-top: 1px dashed #ccc;
+  background: rgba(255,255,255,0.4);
+}
+
+.sw-note-input {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-bottom: 2px dashed var(--accent-secondary, #2b5b84);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--accent-secondary, #2b5b84);
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.sw-note-input::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+.sw-form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.sw-colors {
+  display: flex;
+  gap: 5px;
+}
+
+.sw-color-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.sw-color-btn:hover {
+  transform: scale(1.15);
+}
+
+.sw-color-btn.selected {
+  border-color: #333;
+  box-shadow: 0 0 0 1px white;
+}
+
+.sw-form-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.sw-cancel-btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.sw-cancel-btn:hover {
+  border-color: #999;
+  color: #333;
+}
+
+.sw-save-btn {
+  padding: 5px 14px;
+  background: var(--accent-secondary, #2b5b84);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.3);
+  transition: all 0.2s;
+}
+
+.sw-save-btn:hover {
+  transform: translate(0.5px, 1px);
+  box-shadow: 0px 1px 0 rgba(0,0,0,0.2);
+}
+
+/* Add note button */
+.sw-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  background: rgba(255,255,255,0.5);
+  border: none;
+  border-top: 1px dashed #ccc;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-secondary, #2b5b84);
+  transition: all 0.2s;
+}
+
+.sw-add-btn:hover {
+  background: rgba(255,255,255,0.8);
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .sticky-widget-panel {
+    width: calc(100vw - 2rem);
+    right: 1rem;
+  }
+}

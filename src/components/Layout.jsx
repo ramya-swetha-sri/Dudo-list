@@ -1,7 +1,8 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckSquare, Users, Music, User, Clock, LogOut, Menu, BookOpen, Calendar } from 'lucide-react';
+import { CheckSquare, Users, Music, User, Clock, LogOut, Menu, Calendar } from 'lucide-react';
+import StickyNoteWidget from './StickyNoteWidget';
 import './Layout.css';
 
 import { useTasks } from '../context/TaskContext';
@@ -45,7 +46,6 @@ const Layout = () => {
     { path: '/friend-tasks', label: `${friendName}'s tasks`, icon: Users },
     { path: '/group-tasks', label: 'Group Vibe', icon: Music },
     { path: '/pomodoro', label: 'Pomodoro Clock', icon: Clock },
-    { path: '/notes', label: 'Sticky Notes', icon: BookOpen },
     { path: '/previous-tasks', label: 'Task History', icon: Calendar },
     { path: '/profile', label: 'Profile', icon: User },
   ];
@@ -92,6 +92,7 @@ const Layout = () => {
       <main className="main-content">
         <Outlet />
       </main>
+      <StickyNoteWidget />
     </div>
   );
 };

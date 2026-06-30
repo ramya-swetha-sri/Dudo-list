@@ -1,16 +1,33 @@
-/* Auth notebook/paper theme matching LandingPage */
+/* Auth – sticky-note card on the notebook page */
 
 .auth-container {
   max-width: 420px;
-  margin: 50px auto;
-  padding: 24px;
-  background: #fff9c4 !important; /* light yellow sticky note */
-  border: 2px dashed var(--accent-secondary, #10b981);
-  border-radius: 8px;
-  box-shadow: 3px 5px 10px rgba(0,0,0,0.1), 2px 4px 0 rgba(0,0,0,0.2);
-  transform: rotate(-2deg);
+  margin: 40px auto 60px;
+  padding: 28px 24px;
+  background: #fff9c4 !important; /* sticky-note yellow */
+  border: 2px dashed var(--accent-secondary, #2b5b84);
+  border-radius: 4px;
+  box-shadow: 3px 5px 12px rgba(0,0,0,0.1), 2px 4px 0 rgba(0,0,0,0.15);
+  transform: rotate(-1.5deg);
   font-family: inherit;
   color: var(--text-primary, #333);
+  position: relative;
+  z-index: 20;
+}
+
+/* Tape effect on the sticky note */
+.auth-container::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(2deg);
+  width: 80px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 2px;
+  z-index: 1;
 }
 
 .auth-title {
@@ -18,7 +35,7 @@
   margin-bottom: 20px;
   font-size: 2rem;
   font-weight: bold;
-  color: var(--text-primary);
+  color: var(--accent-secondary, #2b5b84);
   transform: rotate(1deg);
   line-height: 1.2;
 }
@@ -36,19 +53,31 @@
   display: block;
   width: 100%;
   margin-bottom: 16px;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.9);
-  box-shadow: inset 1px 2px 2px rgba(0,0,0,0.05);
-  font-size: 1rem;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 2px dashed var(--accent-secondary, #2b5b84);
+  border-radius: 0;
+  background: transparent;
+  font-size: 1.1rem;
+  font-family: inherit;
+  color: var(--accent-secondary, #2b5b84);
   box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.auth-form input::placeholder {
+  color: #999;
+  font-style: italic;
 }
 
 .auth-form input:focus {
   outline: none;
-  border-color: var(--accent-secondary);
-  box-shadow: 0 0 0 2px rgba(16,185,129,0.2);
+  border-bottom-color: var(--accent-primary, #d94646);
+  background: rgba(255,255,255,0.5);
+}
+
+.auth-form input:disabled {
+  opacity: 0.6;
 }
 
 .auth-info {
@@ -56,9 +85,9 @@
   color: var(--text-secondary);
   font-size: 0.85rem;
   font-style: italic;
-  padding: 8px;
-  background: rgba(255,255,255,0.7);
-  border-left: 3px dashed var(--accent-secondary);
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.5);
+  border-left: 3px dashed var(--accent-secondary, #2b5b84);
 }
 
 .auth-submit {
@@ -66,56 +95,70 @@
   padding: 14px;
   font-size: 1.1rem;
   font-weight: bold;
+  font-family: inherit;
   background: #fff;
   color: #000;
   border: 2px solid #000;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  box-shadow: 2px 4px 0 rgba(0,0,0,0.8);
-  transform: rotate(2deg);
+  box-shadow: 3px 4px 0 rgba(0,0,0,0.8);
+  transform: rotate(1.5deg);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .auth-submit:hover:not(:disabled) {
-  background: var(--accent-secondary);
+  background: var(--accent-secondary, #2b5b84);
   color: white;
-  border-color: var(--accent-secondary);
-  box-shadow: 2px 4px 0 rgba(0,0,0,0.4);
-  transform: translate(1px, 2px) rotate(2deg);
+  border-color: var(--accent-secondary, #2b5b84);
+  box-shadow: 2px 3px 0 rgba(0,0,0,0.3);
+  transform: translate(1px, 2px) rotate(1.5deg);
 }
 
 .auth-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: rotate(2deg);
+  transform: rotate(1.5deg);
 }
 
 .auth-link {
   background: none;
   border: none;
-  color: var(--accent-secondary);
+  color: var(--accent-secondary, #2b5b84);
   cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: underline;
+  font-size: 0.95rem;
+  font-family: inherit;
+  text-decoration: underline wavy;
+  text-underline-offset: 3px;
   padding: 4px 0;
+  transition: color 0.2s;
+}
+
+.auth-link:hover {
+  color: var(--accent-primary, #d94646);
 }
 
 .auth-link.secondary {
   color: var(--text-secondary);
+  text-decoration-style: dashed;
+}
+
+.auth-link.secondary:hover {
+  color: var(--accent-secondary, #2b5b84);
 }
 
 .auth-alert {
-  padding: 12px;
+  padding: 12px 14px;
   margin-top: 16px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 0.9rem;
   text-align: center;
   word-break: break-word;
   border-left: 4px solid;
+  transform: rotate(0.5deg);
 }
 
 .auth-error {
@@ -138,5 +181,5 @@
 .auth-divider {
   margin: 12px 0;
   border: none;
-  border-top: 1px dashed #ddd;
+  border-top: 1px dashed #ccc;
 }

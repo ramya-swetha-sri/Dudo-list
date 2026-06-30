@@ -4,63 +4,65 @@ import { Calendar, Check, Archive } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import './PreviousTasks.css';
 
+const NOTE_COLORS = ['#fff9c4', '#ffccbc', '#c8e6c9', '#bbdefb', '#e1bee7', '#ffe0b2'];
+
 const PreviousTasks = () => {
   const { tasks, groupTasks, themes, archiveCompletedTasks } = useTasks();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [viewType, setViewType] = useState('all'); // all, completed, pending
+  const [viewType, setViewType] = useState('all');
 
-  // Get all unique dates from tasks
-  const uniqueDates = useMemo(() => {
+  // Group tasks by date
+  const tasksByDate = useMemo(() => {
     const allTasks = [...tasks, ...groupTasks];
-    const dates = new Set();
-    
+    const grouped = {};
+
     allTasks.forEach(task => {
       if (task.createdAt) {
         const date = task.createdAt.split('T')[0];
-        dates.add(date);
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(task);
       }
     });
-    
-    return Array.from(dates).sort().reverse();
-  }, [tasks, groupTasks]);
 
-  // Get tasks for selected date
-  const tasksForDate = useMemo(() => {
-    const allTasks = [...tasks, ...groupTasks];
-    let filtered = allTasks.filter(task => 
-      task.createdAt && task.createdAt.split('T')[0] === selectedDate
-    );
+    // Sort dates descending
+    const sortedDates = Object.keys(grouped).sort().reverse();
 
     // Apply view filter
-    if (viewType === 'completed') {
-      filtered = filtered.filter(t => t.completed);
-    } else if (viewType === 'pending') {
-      filtered = filtered.filter(t => !t.completed);
+    if (viewType !== 'all') {
+      sortedDates.forEach(date => {
+        grouped[date] = grouped[date].filter(t =>
+          viewType === 'completed' ? t.completed : !t.completed
+        );
+      });
     }
 
-    return filtered.sort((a, b) => 
-      new Date(b.createdAt) - new Date(a.createdAt)
-    );
-  }, [tasks, groupTasks, selectedDate, viewType]);
+    return { dates: sortedDates, grouped };
+  }, [tasks, groupTasks, viewType]);
 
   const handleArchiveDay = async () => {
-    if (window.confirm('Archive all completed tasks for this day?')) {
+    if (window.confirm('Archive all completed tasks?')) {
       await archiveCompletedTasks();
     }
   };
 
   const getDateDisplay = (date) => {
     const d = new Date(date + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'long', 
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (date === today) return '📌 Today';
+    if (date === yesterdayStr) return '📌 Yesterday';
+    return d.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
   };
 
-  const completedCount = tasksForDate.filter(t => t.completed).length;
-  const totalCount = tasksForDate.length;
+  const totalTasks = [...tasks, ...groupTasks].length;
+  const completedTasks = [...tasks, ...groupTasks].filter(t => t.completed).length;
 
   return (
     <motion.div
@@ -74,36 +76,7 @@ const PreviousTasks = () => {
             <Calendar size={32} className="inline mr-2" />
             Task History
           </h1>
-          <p className="text-secondary mt-2">Review your tasks by date and track your progress</p>
-        </div>
-      </div>
-
-      {/* Date Timeline */}
-      <div className="date-timeline">
-        <div className="timeline-header">
-          <h3>Select Date:</h3>
-        </div>
-        <div className="date-list">
-          {uniqueDates.length > 0 ? (
-            uniqueDates.map((date) => {
-              const dateTasksCount = [...tasks, ...groupTasks].filter(
-                t => t.createdAt && t.createdAt.split('T')[0] === date
-              ).length;
-              
-              return (
-                <button
-                  key={date}
-                  onClick={() => setSelectedDate(date)}
-                  className={`date-btn ${selectedDate === date ? 'active' : ''}`}
-                >
-                  <span className="date-text">{getDateDisplay(date)}</span>
-                  <span className="task-count">{dateTasksCount} tasks</span>
-                </button>
-              );
-            })
-          ) : (
-            <p className="no-dates">No tasks yet</p>
-          )}
+          <p className="text-secondary mt-2">Your tasks pinned on sticky notes, day by day</p>
         </div>
       </div>
 
@@ -114,100 +87,131 @@ const PreviousTasks = () => {
             onClick={() => setViewType('all')}
             className={`filter-btn ${viewType === 'all' ? 'active' : ''}`}
           >
-            All ({totalCount})
+            All ({totalTasks})
           </button>
           <button
             onClick={() => setViewType('completed')}
             className={`filter-btn ${viewType === 'completed' ? 'active' : ''}`}
           >
             <Check size={16} />
-            Completed ({completedCount})
+            Done ({completedTasks})
           </button>
           <button
             onClick={() => setViewType('pending')}
             className={`filter-btn ${viewType === 'pending' ? 'active' : ''}`}
           >
-            Pending ({totalCount - completedCount})
+            Pending ({totalTasks - completedTasks})
           </button>
         </div>
         <button onClick={handleArchiveDay} className="archive-btn">
           <Archive size={18} />
-          Archive Day
+          Archive
         </button>
       </div>
 
-      {/* Tasks Display */}
-      <div className="tasks-section">
-        <h2 className="section-title">{getDateDisplay(selectedDate)}</h2>
-        
-        {tasksForDate.length > 0 ? (
-          <AnimatePresence>
-            <div className="tasks-list">
-              {tasksForDate.map((task, index) => (
+      {/* Sticky Notes by Date */}
+      <div className="history-notes-wall">
+        <AnimatePresence>
+          {tasksByDate.dates.length > 0 ? (
+            tasksByDate.dates.map((date, dateIdx) => {
+              const dateTasks = tasksByDate.grouped[date];
+              if (!dateTasks || dateTasks.length === 0) return null;
+
+              const noteColor = NOTE_COLORS[dateIdx % NOTE_COLORS.length];
+              const completedCount = dateTasks.filter(t => t.completed).length;
+              const rotation = ((dateIdx % 5) - 2) * 1.5; // -3 to +3 degrees
+
+              return (
                 <motion.div
-                  key={task.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`task-item ${task.completed ? 'completed' : ''}`}
+                  key={date}
+                  className="history-sticky-note"
+                  style={{
+                    backgroundColor: noteColor,
+                    '--note-rotation': `${rotation}deg`
+                  }}
+                  initial={{ opacity: 0, scale: 0.8, rotate: rotation }}
+                  animate={{ opacity: 1, scale: 1, rotate: rotation }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ delay: dateIdx * 0.08 }}
                 >
-                  <div className="task-checkbox">
-                    {task.completed && <Check size={20} />}
-                  </div>
-                  <div className="task-content">
-                    <p className="task-text">{task.text}</p>
-                    <span className="task-meta">
-                      {new Date(task.createdAt).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                  {/* Date header tab */}
+                  <div className="note-date-tab">
+                    <span className="note-date-text">{getDateDisplay(date)}</span>
+                    <span className="note-date-stats">
+                      {completedCount}/{dateTasks.length} done
                     </span>
                   </div>
-                  <div className="task-type">
-                    <span className={`badge ${task.taskType}`}>
-                      {task.taskType === 'group' ? 'Group' : 'Personal'}
-                    </span>
+
+                  {/* Progress strip */}
+                  <div className="note-progress-strip">
+                    <div
+                      className="note-progress-fill"
+                      style={{
+                        width: `${dateTasks.length > 0 ? (completedCount / dateTasks.length) * 100 : 0}%`,
+                        background: themes.groupTasks
+                      }}
+                    />
                   </div>
+
+                  {/* Tasks on the note */}
+                  <ul className="note-task-list">
+                    {dateTasks.map((task) => (
+                      <li
+                        key={task.id}
+                        className={`note-task-item ${task.completed ? 'completed' : ''}`}
+                      >
+                        <span className="note-checkbox">
+                          {task.completed ? '☑' : '☐'}
+                        </span>
+                        <span className="note-task-text">{task.text}</span>
+                        <span className={`note-task-badge ${task.taskType}`}>
+                          {task.taskType === 'group' ? 'G' : 'P'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Pin decoration */}
+                  <div className="note-pin" />
                 </motion.div>
-              ))}
-            </div>
-          </AnimatePresence>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="empty-state"
-          >
-            <Calendar size={48} />
-            <p>No {viewType !== 'all' ? viewType : ''} tasks found for this date</p>
-          </motion.div>
-        )}
+              );
+            })
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="empty-state"
+            >
+              <Calendar size={48} />
+              <p>No {viewType !== 'all' ? viewType : ''} tasks found</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Statistics */}
-      {tasksForDate.length > 0 && (
+      {/* Stats cards */}
+      {totalTasks > 0 && (
         <div className="statistics">
-          <div className="stat-card">
+          <div className="stat-card stat-note" style={{ backgroundColor: '#fff9c4' }}>
             <h4>Completion Rate</h4>
-            <p className="stat-value">
-              {Math.round((completedCount / totalCount) * 100)}%
+            <p className="stat-value" style={{ color: themes.myTasks }}>
+              {Math.round((completedTasks / totalTasks) * 100)}%
             </p>
             <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${(completedCount / totalCount) * 100}%` }}
+              <div
+                className="progress-fill"
+                style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
               />
             </div>
           </div>
-          <div className="stat-card">
-            <h4>Tasks Today</h4>
-            <p className="stat-value">{totalCount}</p>
+          <div className="stat-card stat-note" style={{ backgroundColor: '#bbdefb' }}>
+            <h4>Total Tasks</h4>
+            <p className="stat-value" style={{ color: themes.friendTasks }}>{totalTasks}</p>
           </div>
-          <div className="stat-card">
+          <div className="stat-card stat-note" style={{ backgroundColor: '#c8e6c9' }}>
             <h4>Completed</h4>
             <p className="stat-value" style={{ color: themes.groupTasks }}>
-              {completedCount}
+              {completedTasks}
             </p>
           </div>
         </div>
