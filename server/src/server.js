@@ -330,6 +330,134 @@ app.delete('/api/notes/:id', verifyToken, async (req, res) => {
   }
 });
 
+// ============ SCRAPBOOK ROUTES ============
+
+// Create or update scrapbook entry
+app.post('/api/scrapbook', verifyToken, async (req, res) => {
+  try {
+    const { date, stamp, photoUrl, caption, shared } = req.body;
+    
+    if (!date) {
+      return res.status(400).json({ error: 'Date is required' });
+    }
+
+    // Check if entry already exists for this date and user
+    const existing = await prisma.scrapbookEntry.findFirst({
+      where: {
+        userId: req.user.id,
+        date
+      }
+    });
+
+    let entry;
+    if (existing) {
+      entry = await prisma.scrapbookEntry.update({
+        where: { id: existing.id },
+        data: {
+          ...(stamp !== undefined && { stamp }),
+          ...(photoUrl !== undefined && { photoUrl }),
+          ...(caption !== undefined && { caption }),
+          ...(shared !== undefined && { shared })
+        }
+      });
+    } else {
+      entry = await prisma.scrapbookEntry.create({
+        data: {
+          date,
+          stamp: stamp || null,
+          photoUrl: photoUrl || null,
+          caption: caption || '',
+          shared: shared || false,
+          userId: req.user.id
+        }
+      });
+    }
+
+    // Notify friends in real-time if shared
+    if (entry.shared) {
+      io.emit('friend-scrapbook:updated', { userId: req.user.id, entry });
+    }
+
+    res.json(entry);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save scrapbook entry' });
+  }
+});
+
+// Get user's scrapbook entries
+app.get('/api/scrapbook', verifyToken, async (req, res) => {
+  try {
+    const entries = await prisma.scrapbookEntry.findMany({
+      where: { userId: req.user.id },
+      orderBy: { date: 'asc' }
+    });
+    res.json(entries);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch scrapbook entries' });
+  }
+});
+
+// Get shared scrapbook entries from friends
+app.get('/api/scrapbook/friends', verifyToken, async (req, res) => {
+  try {
+    // Get list of friends
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { friends: { select: { id: true } } }
+    });
+
+    const friendIds = user.friends.map(f => f.id);
+
+    const entries = await prisma.scrapbookEntry.findMany({
+      where: {
+        userId: { in: friendIds },
+        shared: true
+      },
+      include: {
+        user: {
+          select: { id: true, email: true, displayName: true }
+        }
+      },
+      orderBy: { date: 'asc' }
+    });
+
+    res.json(entries);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch friend scrapbook entries' });
+  }
+});
+
+// Delete scrapbook entry
+app.delete('/api/scrapbook/:id', verifyToken, async (req, res) => {
+  try {
+    const entry = await prisma.scrapbookEntry.findUnique({
+      where: { id: req.params.id }
+    });
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+
+    if (entry.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    await prisma.scrapbookEntry.delete({
+      where: { id: req.params.id }
+    });
+
+    io.emit('friend-scrapbook:deleted', { userId: req.user.id, entryId: req.params.id });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete scrapbook entry' });
+  }
+});
+
 // ============ HEALTH CHECK ============
 
 app.get('/api/health', async (req, res) => {

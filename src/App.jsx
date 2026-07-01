@@ -10,6 +10,7 @@ import Pomodoro from './pages/Pomodoro';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
 import PreviousTasks from './pages/PreviousTasks';
+import Scrapbook from './pages/Scrapbook';
 import Layout from './components/Layout';
 
 function AppContent() {
@@ -39,6 +40,7 @@ function AppContent() {
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/previous-tasks" element={<PreviousTasks />} />
+        <Route path="/scrapbook" element={<Scrapbook />} />
       </Route>
     </Routes>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckSquare, Users, Music, User, Clock, LogOut, Menu, Calendar } from 'lucide-react';
+import { CheckSquare, Users, Music, User, Clock, LogOut, Menu, Calendar, BookOpen } from 'lucide-react';
 import StickyNoteWidget from './StickyNoteWidget';
 import './Layout.css';
 
@@ -45,6 +45,7 @@ const Layout = () => {
     { path: '/my-tasks', label: "My Tasks", icon: User },
     { path: '/friend-tasks', label: `${friendName}'s tasks`, icon: Users },
     { path: '/group-tasks', label: 'Group Vibe', icon: Music },
+    { path: '/scrapbook', label: 'Scrap Book', icon: BookOpen },
     { path: '/pomodoro', label: 'Pomodoro Clock', icon: Clock },
     { path: '/previous-tasks', label: 'Task History', icon: Calendar },
     { path: '/profile', label: 'Profile', icon: User },

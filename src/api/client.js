@@ -357,6 +357,47 @@ export const deleteNote = async (noteId) => {
   return response.json();
 };
 
+// ============ SCRAPBOOK ============
+
+export const saveScrapbookEntry = async (entryData) => {
+  const response = await fetch(`${API_BASE_URL}/api/scrapbook`, {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify(entryData)
+  });
+
+  if (!response.ok) throw new Error('Failed to save scrapbook entry');
+  return response.json();
+};
+
+export const getScrapbookEntries = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/scrapbook`, {
+    headers: getAuthHeader()
+  });
+
+  if (!response.ok) throw new Error('Failed to fetch scrapbook entries');
+  return response.json();
+};
+
+export const getFriendScrapbookEntries = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/scrapbook/friends`, {
+    headers: getAuthHeader()
+  });
+
+  if (!response.ok) throw new Error('Failed to fetch friend scrapbook entries');
+  return response.json();
+};
+
+export const deleteScrapbookEntry = async (entryId) => {
+  const response = await fetch(`${API_BASE_URL}/api/scrapbook/${entryId}`, {
+    method: 'DELETE',
+    headers: getAuthHeader()
+  });
+
+  if (!response.ok) throw new Error('Failed to delete scrapbook entry');
+  return response.json();
+};
+
 // ============ SOCKET.IO (Real-time) ============
 
 // Task events (own tasks)
@@ -424,5 +465,17 @@ export const offFriendRequestRejected = () => socket.off('friendRequest:rejected
 export const offFriendRemoved = () => socket.off('friend:removed');
 export const offUserOnline = () => socket.off('user:online');
 export const offUserOffline = () => socket.off('user:offline');
+
+// Scrapbook events
+export const onFriendScrapbookUpdated = (callback) => {
+  socket.on('friend-scrapbook:updated', callback);
+};
+
+export const onFriendScrapbookDeleted = (callback) => {
+  socket.on('friend-scrapbook:deleted', callback);
+};
+
+export const offFriendScrapbookUpdated = () => socket.off('friend-scrapbook:updated');
+export const offFriendScrapbookDeleted = () => socket.off('friend-scrapbook:deleted');
 
 export default socket;

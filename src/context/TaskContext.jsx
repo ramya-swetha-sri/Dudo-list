@@ -16,6 +16,8 @@ export const TaskProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [friendTasksData, setFriendTasksData] = useState({});
+  const [scrapbookEntries, setScrapbookEntries] = useState([]);
+  const [friendScrapbookEntries, setFriendScrapbookEntries] = useState([]);
   const [themes, setThemes] = useState({
     myTasks: '#ec4899',
     friendTasks: '#2196f3',
@@ -29,7 +31,7 @@ export const TaskProvider = ({ children }) => {
   async function loadUserData() {
     try {
       setError(null);
-      const [tasksData, friendsData, requestsData] = await Promise.all([
+      const [tasksData, friendsData, requestsData, scrapbookData, friendScrapbookData] = await Promise.all([
         api.getTasks().catch(err => {
           console.log('getTasks failed:', err.message);
           return [];
@@ -40,6 +42,14 @@ export const TaskProvider = ({ children }) => {
         }),
         api.getFriendRequests().catch(err => {
           console.log('getFriendRequests failed:', err.message);
+          return [];
+        }),
+        api.getScrapbookEntries().catch(err => {
+          console.log('getScrapbookEntries failed:', err.message);
+          return [];
+        }),
+        api.getFriendScrapbookEntries().catch(err => {
+          console.log('getFriendScrapbookEntries failed:', err.message);
           return [];
         })
       ]);
@@ -85,6 +95,8 @@ export const TaskProvider = ({ children }) => {
       setFriendTasksData(updatedFriendTasksData);
       setFriends(friendsData || []);
       setFriendRequests(requestsData || []);
+      setScrapbookEntries(scrapbookData || []);
+      setFriendScrapbookEntries(friendScrapbookData || []);
     } catch (err) {
       console.warn('Warning: Could not load some user data:', err.message);
       setError(err.message);
@@ -234,6 +246,22 @@ export const TaskProvider = ({ children }) => {
       }
     });
 
+    api.onFriendScrapbookUpdated(({ userId, entry }) => {
+      setFriendScrapbookEntries(prev => {
+        const idx = prev.findIndex(e => e.id === entry.id);
+        if (idx !== -1) {
+          const updated = [...prev];
+          updated[idx] = { ...entry, user: friends.find(f => f.id === userId) };
+          return updated;
+        }
+        return [...prev, { ...entry, user: friends.find(f => f.id === userId) }];
+      });
+    });
+
+    api.onFriendScrapbookDeleted(({ userId, entryId }) => {
+      setFriendScrapbookEntries(prev => prev.filter(e => e.id !== entryId));
+    });
+
     api.onUserOnline(({ userId }) => {
       console.log(`User ${userId} is online`);
     });
@@ -253,6 +281,8 @@ export const TaskProvider = ({ children }) => {
       api.offFriendRequestAccepted();
       api.offFriendRequestRejected();
       api.offFriendRemoved();
+      api.offFriendScrapbookUpdated();
+      api.offFriendScrapbookDeleted();
       api.offUserOnline();
       api.offUserOffline();
     };
@@ -638,7 +668,41 @@ export const TaskProvider = ({ children }) => {
         deleteNote,
         loadNotes,
         getTasksByDate,
-        archiveCompletedTasks
+        archiveCompletedTasks,
+        scrapbookEntries,
+        friendScrapbookEntries,
+        saveScrapbook: async (entryData) => {
+          try {
+            setError(null);
+            const saved = await api.saveScrapbookEntry(entryData);
+            setScrapbookEntries(prev => {
+              const idx = prev.findIndex(e => e.date === saved.date);
+              if (idx !== -1) {
+                const updated = [...prev];
+                updated[idx] = saved;
+                return updated;
+              }
+              return [...prev, saved];
+            });
+            return saved;
+          } catch (err) {
+            setError(err.message);
+            console.error('Error saving scrapbook entry:', err);
+            return null;
+          }
+        },
+        removeScrapbook: async (entryId) => {
+          try {
+            setError(null);
+            await api.deleteScrapbookEntry(entryId);
+            setScrapbookEntries(prev => prev.filter(e => e.id !== entryId));
+            return true;
+          } catch (err) {
+            setError(err.message);
+            console.error('Error deleting scrapbook entry:', err);
+            return false;
+          }
+        }
       }}
     >
       {children}
