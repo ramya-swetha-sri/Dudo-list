@@ -6,6 +6,52 @@ import { useTasks } from '../context/TaskContext';
 import Auth from '../components/Auth';
 import './LandingPage.css';
 
+const TypewriterText = ({ text, delay = 0, speed = 0.06 }) => {
+  const containerVariants = {
+    hidden: { opacity: 1 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: speed,
+        delayChildren: delay,
+      },
+    },
+  };
+
+  const letterVariants = {
+    hidden: { opacity: 0, y: 5, rotate: -5 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      rotate: 0,
+      transition: {
+        type: "spring",
+        damping: 15,
+        stiffness: 150,
+      },
+    },
+  };
+
+  return (
+    <motion.span
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      style={{ display: 'inline-block' }}
+    >
+      {text.split("").map((char, index) => (
+        <motion.span
+          key={index}
+          variants={letterVariants}
+          style={{ display: 'inline-block', whiteSpace: 'pre' }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
+
 const LandingPage = () => {
   const { user, signout } = useTasks();
   const navigate = useNavigate();
@@ -60,8 +106,23 @@ const LandingPage = () => {
             </div>
 
             <h1 className="hero-title">
-              Welcome to<br />
-              <span>DuoTask</span>
+              <TypewriterText text="Welcome to" delay={0.2} />
+              <br />
+              <span style={{ display: 'inline-block' }}>
+                <TypewriterText text="DuoTask" delay={1.0} />
+                <motion.span
+                  animate={{ opacity: [1, 0, 1] }}
+                  transition={{ repeat: Infinity, duration: 0.8 }}
+                  style={{ 
+                    display: 'inline-block', 
+                    marginLeft: '4px', 
+                    color: 'var(--accent-primary, #d94646)',
+                    fontWeight: '300'
+                  }}
+                >
+                  |
+                </motion.span>
+              </span>
             </h1>
             
             <p className="hero-subtitle">
@@ -106,8 +167,23 @@ const LandingPage = () => {
           </div>
 
           <h1 className="hero-title">
-            conquer your day, <br />
-            <span>together.</span>
+            <TypewriterText text="conquer your day," delay={0.2} />
+            <br />
+            <span style={{ display: 'inline-block' }}>
+              <TypewriterText text="together." delay={1.2} />
+              <motion.span
+                animate={{ opacity: [1, 0, 1] }}
+                transition={{ repeat: Infinity, duration: 0.8 }}
+                style={{ 
+                  display: 'inline-block', 
+                  marginLeft: '4px', 
+                  color: 'var(--accent-primary, #d94646)',
+                  fontWeight: '300'
+                }}
+              >
+                |
+              </motion.span>
+            </span>
           </h1>
           
           <p className="hero-subtitle">

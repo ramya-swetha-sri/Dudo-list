@@ -3,10 +3,11 @@
 }
 
 .theme-settings-card {
-  background: white;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px dashed var(--accent-secondary);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 2px 4px 10px rgba(0,0,0,0.05);
 }
 
 .theme-header {
@@ -35,7 +36,7 @@
 /* Theme Preview Section */
 .theme-preview-section {
   padding: 40px 32px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px dashed var(--border-color);
 }
 
 .theme-preview-section h3 {
@@ -98,8 +99,8 @@
 /* Preset Themes Section */
 .preset-themes-section {
   padding: 40px 32px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-bottom: 1px dashed var(--border-color);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .preset-themes-section h3 {
@@ -121,8 +122,8 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px dashed var(--border-color);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Palette } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
@@ -72,6 +72,12 @@ const ThemeSettings = () => {
   const [customThemes, setCustomThemes] = useState(themes);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (themes) {
+      setCustomThemes(themes);
+    }
+  }, [themes]);
 
   const handleColorChange = (section, color) => {
     const newThemes = { ...customThemes, [section]: color };

@@ -9,7 +9,7 @@
   flex-direction: column;
 
   /* Notebook-ruled background */
-  background-color: #fff;
+  background-color: var(--bg-primary, #ffffff);
   background-image:
     /* Red margin line */
     linear-gradient(to right, transparent 68px, var(--accent-primary, #d94646) 68px, var(--accent-primary, #d94646) 70px, transparent 70px),
@@ -18,8 +18,8 @@
       to bottom,
       transparent,
       transparent calc(var(--line-height, 2rem) - 1px),
-      #c8d8e8 calc(var(--line-height, 2rem) - 1px),
-      #c8d8e8 var(--line-height, 2rem)
+      color-mix(in srgb, var(--accent-secondary, #2b5b84) 15%, transparent) calc(var(--line-height, 2rem) - 1px),
+      color-mix(in srgb, var(--accent-secondary, #2b5b84) 15%, transparent) var(--line-height, 2rem)
     );
   background-size: 100% var(--line-height, 2rem);
   background-position: 0 0;
@@ -113,8 +113,7 @@
 
 .hero-title span {
   color: var(--accent-secondary, #2b5b84);
-  text-decoration: underline wavy var(--accent-primary, #d94646);
-  text-underline-offset: 6px;
+  text-decoration: none;
 }
 
 .hero-subtitle {
@@ -221,8 +220,8 @@
         to bottom,
         transparent,
         transparent calc(var(--line-height, 2rem) - 1px),
-        #c8d8e8 calc(var(--line-height, 2rem) - 1px),
-        #c8d8e8 var(--line-height, 2rem)
+        color-mix(in srgb, var(--accent-secondary, #2b5b84) 15%, transparent) calc(var(--line-height, 2rem) - 1px),
+        color-mix(in srgb, var(--accent-secondary, #2b5b84) 15%, transparent) var(--line-height, 2rem)
       );
   }
 

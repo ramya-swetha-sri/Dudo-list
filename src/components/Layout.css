@@ -145,9 +145,25 @@
 .main-content {
   flex: 1;
   padding: 2rem;
+  padding-left: 90px;
   margin: 0 auto;
   max-width: 900px;
   transition: all 0.3s ease-in-out;
+
+  /* Notebook-ruled background */
+  background-image:
+    /* Red margin line */
+    linear-gradient(to right, transparent 68px, var(--accent-primary, #d94646) 68px, var(--accent-primary, #d94646) 70px, transparent 70px),
+    /* Blue horizontal rules */
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(var(--line-height, 2rem) - 1px),
+      color-mix(in srgb, var(--accent-secondary, #2b5b84) 15%, transparent) calc(var(--line-height, 2rem) - 1px),
+      color-mix(in srgb, var(--accent-secondary, #2b5b84) 15%, transparent) var(--line-height, 2rem)
+    );
+  background-size: 100% var(--line-height, 2rem);
+  background-position: 0 0;
 }
 
 .sidebar-collapsed .main-content {
@@ -180,5 +196,16 @@
     flex-direction: row;
     overflow-x: auto;
     gap: 1rem;
+  }
+  .main-content {
+    padding-left: 1.5rem;
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent calc(var(--line-height, 2rem) - 1px),
+        color-mix(in srgb, var(--accent-secondary, #2b5b84) 15%, transparent) calc(var(--line-height, 2rem) - 1px),
+        color-mix(in srgb, var(--accent-secondary, #2b5b84) 15%, transparent) var(--line-height, 2rem)
+      );
   }
 }
